@@ -108,7 +108,7 @@
         }
     });
 
-
+    
     /*==================================================================
     [ Show / hide modal search ]*/
     $('.js-show-modal-search').on('click', function(){
@@ -170,6 +170,7 @@
     /*==================================================================
     [ Filter / Search product ]*/
     $('.js-show-filter').on('click',function(){
+        
         $(this).toggleClass('show-filter');
         $('.panel-filter').slideToggle(400);
 

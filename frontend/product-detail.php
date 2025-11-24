@@ -345,6 +345,18 @@
 	</div>
 		
 
+<!-- chi tiét sp -->
+	<?php
+	require 'db.php';
+
+	$ma_sp = $_GET['id'];
+	$sl = "SELECT * FROM san_pham WHERE ma_sp = :ma_sp";
+	$stmt = $pdo->prepare($sl);
+	$stmt->execute(['ma_sp' => $ma_sp]);
+	$san_pham = $stmt->fetchAll();
+	?>
+
+	<?php foreach ($san_pham as $p) { ?>
 	<!-- Product Detail -->
 	<section class="sec-product-detail bg0 p-t-65 p-b-60">
 		<div class="container">
@@ -393,57 +405,75 @@
 				<div class="col-md-6 col-lg-5 p-b-30">
 					<div class="p-r-50 p-t-5 p-lr-0-lg">
 						<h4 class="mtext-105 cl2 js-name-detail p-b-14">
-							Lightweight Jacket
+							<?= $p['ten_sp']; ?>
 						</h4>
 
 						<span class="mtext-106 cl2">
-							$58.79
+							<?php echo number_format($p['gia_sp'], 0, ',', '.'); ?>
+						₫
 						</span>
 
 						<p class="stext-102 cl3 p-t-23">
-							Nulla eget sem vitae eros pharetra viverra. Nam vitae luctus ligula. Mauris consequat ornare feugiat.
+							<?= $p['mota']; ?>
 						</p>
-						
 						<!--  -->
+						<?php 
+						$sl_size = "SELECT kc.ten_kichco 
+							FROM kich_co kc
+							JOIN kichco_sp ks ON kc.ma_kichco = ks.ma_kichco
+							WHERE ks.ma_sp = :ma_sp";
+						$stmt_size = $pdo->prepare($sl_size);
+						$stmt_size->execute(['ma_sp' => $p['ma_sp']]);
+						$kich_co = $stmt_size->fetchAll();
+						?>
+
 						<div class="p-t-33">
 							<div class="flex-w flex-r-m p-b-10">
 								<div class="size-203 flex-c-m respon6">
-									Size
+									Kích cỡ
 								</div>
 
 								<div class="size-204 respon6-next">
 									<div class="rs1-select2 bor8 bg0">
 										<select class="js-select2" name="time">
-											<option>Choose an option</option>
-											<option>Size S</option>
-											<option>Size M</option>
-											<option>Size L</option>
-											<option>Size XL</option>
+											<option>Lựa chọn</option>
+											<?php foreach ($kich_co as $kc) { ?>
+												<option><?php echo $kc['ten_kichco']; ?></option>
+											<?php } ?>
 										</select>
 										<div class="dropDownSelect2"></div>
 									</div>
 								</div>
 							</div>
+							
+						<?php
+						$sl_mau = "SELECT ms.ten_mau
+							FROM mau_sac ms
+							JOIN mau_sp msp ON ms.ma_mau = msp.ma_mau
+							WHERE msp.ma_sp = :ma_sp";
 
+						$stmt_mau = $pdo->prepare($sl_mau);
+						$stmt_mau->execute(['ma_sp' => $p['ma_sp']]);
+						$mau_sac = $stmt_mau->fetchAll(); ?>
+							
 							<div class="flex-w flex-r-m p-b-10">
 								<div class="size-203 flex-c-m respon6">
-									Color
+									Màu sắc
 								</div>
 
 								<div class="size-204 respon6-next">
 									<div class="rs1-select2 bor8 bg0">
 										<select class="js-select2" name="time">
-											<option>Choose an option</option>
-											<option>Red</option>
-											<option>Blue</option>
-											<option>White</option>
-											<option>Grey</option>
+										<option>Lựa chọn</option>
+										<?php foreach ($mau_sac as $ms) { ?>
+											<option><?php echo $ms['ten_mau']; ?></option>
+										<?php } ?>
 										</select>
 										<div class="dropDownSelect2"></div>
 									</div>
 								</div>
 							</div>
-
+						<?php } ?>					
 							<div class="flex-w flex-r-m p-b-10">
 								<div class="size-204 flex-w flex-m respon6-next">
 									<div class="wrap-num-product flex-w m-r-20 m-tb-10">
@@ -458,9 +488,13 @@
 										</div>
 									</div>
 
-									<button class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail">
-										Add to cart
+									<button class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail"
+											data-id="<?= $product['ma_sp'] ?>"
+											data-ten="<?= $product['ten_sp'] ?>"
+											data-gia="<?= $product['gia_sp'] ?>">
+										Thêm vào giỏ
 									</button>
+
 								</div>
 							</div>	
 						</div>
@@ -1229,7 +1263,7 @@ Bản quyền &copy;<script>document.write(new Date().getFullYear());</script> |
 										</div>
 
 										<button class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail">
-											Add to cart
+											Thêm vào giỏ
 										</button>
 									</div>
 								</div>	
