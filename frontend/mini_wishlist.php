@@ -1,5 +1,10 @@
 <?php
 // mini_wishlist.php
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 $wishlist = $_SESSION['wishlist'] ?? [];
 $count    = count($wishlist);
 ?>
@@ -20,7 +25,9 @@ $count    = count($wishlist);
 
         <div class="header-cart-content flex-w js-pscroll">
             <?php if ($count == 0): ?>
-                <p class="stext-110 p-t-20">Chưa có sản phẩm nào trong danh sách yêu thích.</p>
+                <p class="stext-110 p-t-20">
+                    Chưa có sản phẩm nào trong danh sách yêu thích.
+                </p>
             <?php else: ?>
                 <ul class="header-cart-wrapitem w-full">
                     <?php foreach ($wishlist as $item): ?>

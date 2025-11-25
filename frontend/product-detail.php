@@ -63,12 +63,21 @@ if ($id <= 0) {
 
 // Lấy sản phẩm + 1 hình ảnh
 $sql = "
-	SELECT sp.ma_sp, sp.ten_sp, sp.gia, sp.mota,
-		   MIN(img.ten_anh) AS ten_anh
-	FROM san_pham sp
-	LEFT JOIN hinhanh_sp img ON sp.ma_sp = img.ma_sp
-	WHERE sp.ma_sp = $id
-	GROUP BY sp.ma_sp, sp.ten_sp, sp.gia, sp.mota
+    SELECT 
+        sp.ma_sp, 
+        sp.ten_sp, 
+        sp.gia, 
+        sp.mota,
+        sp.ma_loaisp,          -- khóa ngoại tới bảng loai_sp
+        l.ten_loai,            -- tên loại
+        MIN(img.ten_anh) AS ten_anh
+    FROM san_pham sp
+    LEFT JOIN hinhanh_sp img ON sp.ma_sp = img.ma_sp
+    LEFT JOIN loai_sp l      ON sp.ma_loaisp = l.ma_loaisp
+    WHERE sp.ma_sp = $id
+    GROUP BY 
+        sp.ma_sp, sp.ten_sp, sp.gia, sp.mota,
+        sp.ma_loaisp, l.ten_loai
 ";
 
 $result = mysqli_query($conn, $sql);
@@ -80,6 +89,36 @@ if (!$result || mysqli_num_rows($result) == 0) {
 
 
 $product = mysqli_fetch_assoc($result);
+
+// Lấy kích cỡ từ DB
+$sizes = [];
+$sql_size = "
+    SELECT kc.ten_kichco
+    FROM kich_co kc
+    JOIN kichco_sp ks ON kc.ma_kichco = ks.ma_kichco
+    WHERE ks.ma_sp = $id
+";
+$rs_size = mysqli_query($conn, $sql_size);
+if ($rs_size) {
+    while ($row = mysqli_fetch_assoc($rs_size)) {
+        $sizes[] = $row['ten_kichco'];
+    }
+}
+
+// Lấy màu sắc từ DB
+$colors = [];
+$sql_color = "
+    SELECT ms.ten_mau
+    FROM mau_sac ms
+    JOIN mau_sp msp ON ms.ma_mau = msp.ma_mau
+    WHERE msp.ma_sp = $id
+";
+$rs_color = mysqli_query($conn, $sql_color);
+if ($rs_color) {
+    while ($row = mysqli_fetch_assoc($rs_color)) {
+        $colors[] = $row['ten_mau'];
+    }
+}
 
 // Lấy tất cả ảnh của sản phẩm
 $images = [];
@@ -432,10 +471,12 @@ $wishCount   = count($wishlist);
 				<i class="fa fa-angle-right m-l-9 m-r-10" aria-hidden="true"></i>
 			</a>
 
-			<a href="product.php" class="stext-109 cl8 hov-cl1 trans-04">
-				Áo khoác
-				<i class="fa fa-angle-right m-l-9 m-r-10" aria-hidden="true"></i>
-			</a>
+<a href="product.php?category=<?php echo (int)$product['ma_loaisp']; ?>" 
+   class="stext-109 cl8 hov-cl1 trans-04">
+    <?php echo htmlspecialchars($product['ten_loai'] ?? 'Danh mục'); ?>
+    <i class="fa fa-angle-right m-l-9 m-r-10" aria-hidden="true"></i>
+</a>
+
 
 			<span class="stext-109 cl4">
     <?php echo htmlspecialchars($product['ten_sp']); ?>
@@ -500,44 +541,53 @@ $wishCount   = count($wishlist);
 					
 						
 						<!--  -->
-						<div class="p-t-33">
-							<div class="flex-w flex-r-m p-b-10">
-								<div class="size-203 flex-c-m respon6">
-									Kích cỡ
-								</div>
+					<div class="p-t-33">
+	<!-- Kích cỡ -->
+	<div class="flex-w flex-r-m p-b-10">
+		<div class="size-203 flex-c-m respon6">
+			Kích cỡ
+		</div>
 
-								<div class="size-204 respon6-next">
-									<div class="rs1-select2 bor8 bg0">
-										<select class="js-select2" name="size">
-											<option>Chọn kích cỡ</option>
-											<option>Size S</option>
-											<option>Size M</option>
-											<option>Size L</option>
-											<option>Size XL</option>
-										</select>
-										<div class="dropDownSelect2"></div>
-									</div>
-								</div>
-							</div>
+		<div class="size-204 respon6-next">
+			<div class="rs1-select2 bor8 bg0">
+				<select class="js-select2" name="size">
+					<option value="">Chọn kích cỡ</option>
+					<?php if (!empty($sizes)): ?>
+						<?php foreach ($sizes as $kc): ?>
+							<option><?php echo htmlspecialchars($kc); ?></option>
+						<?php endforeach; ?>
+					<?php else: ?>
+						<option disabled>Đang cập nhật</option>
+					<?php endif; ?>
+				</select>
+				<div class="dropDownSelect2"></div>
+			</div>
+		</div>
+	</div>
 
-							<div class="flex-w flex-r-m p-b-10">
-								<div class="size-203 flex-c-m respon6">
-									Màu sắc
-								</div>
+	<!-- Màu sắc -->
+	<div class="flex-w flex-r-m p-b-10">
+		<div class="size-203 flex-c-m respon6">
+			Màu sắc
+		</div>
 
-								<div class="size-204 respon6-next">
-									<div class="rs1-select2 bor8 bg0">
-										<select class="js-select2" name="color">
-											<option>Chọn màu sắc</option>
-											<option>Đỏ</option>
-											<option>Xanh dương</option>
-											<option>Trắng</option>
-											<option>Xám</option>
-										</select>
-										<div class="dropDownSelect2"></div>
-									</div>
-								</div>
-							</div>
+		<div class="size-204 respon6-next">
+			<div class="rs1-select2 bor8 bg0">
+				<select class="js-select2" name="color">
+					<option value="">Chọn màu sắc</option>
+					<?php if (!empty($colors)): ?>
+						<?php foreach ($colors as $mau): ?>
+							<option><?php echo htmlspecialchars($mau); ?></option>
+						<?php endforeach; ?>
+					<?php else: ?>
+						<option disabled>Đang cập nhật</option>
+					<?php endif; ?>
+				</select>
+				<div class="dropDownSelect2"></div>
+			</div>
+		</div>
+	</div>
+
 
 							<div class="flex-w flex-r-m p-b-10">
 								<div class="size-204 flex-w flex-m respon6-next">
@@ -774,11 +824,47 @@ $wishCount   = count($wishlist);
     </span>
 
     <span class="stext-107 cl6 p-lr-25">
-        Danh mục: Áo khoác, Vest &amp; Blazer
-    </span>
-</div>
+        Danh mục: 
+     <a href="product.php?category=<?php echo (int)$product['ma_loaisp']; ?>" 
+   class="stext-109 cl8 hov-cl1 trans-04">
+    <?php echo htmlspecialchars($product['ten_loai'] ?? 'Danh mục'); ?>
+    <i class="fa fa-angle-right m-l-9 m-r-10" aria-hidden="true"></i>
+</a>
+
 
 	</section>
+<?php
+// Lấy danh sách sản phẩm liên quan cùng danh mục
+$related = [];
+if (!empty($product['ma_loaisp'])) {
+    $ma_loaisp      = (int)$product['ma_loaisp'];
+    $ma_sp_hientai  = (int)$product['ma_sp'];
+
+    $sql_related = "
+        SELECT sp.ma_sp,
+               sp.ten_sp,
+               sp.gia,
+               MIN(img.ten_anh) AS ten_anh
+        FROM san_pham sp
+        LEFT JOIN hinhanh_sp img ON sp.ma_sp = img.ma_sp
+        WHERE sp.ma_loaisp = $ma_loaisp
+          AND sp.ma_sp <> $ma_sp_hientai
+        GROUP BY sp.ma_sp, sp.ten_sp, sp.gia
+        ORDER BY sp.ma_sp DESC
+        LIMIT 8
+    ";
+
+    $rs_related = mysqli_query($conn, $sql_related);
+    if ($rs_related) {
+        while ($row = mysqli_fetch_assoc($rs_related)) {
+            if (empty($row['ten_anh'])) {
+                $row['ten_anh'] = 'product-01.jpg';
+            }
+            $related[] = $row;
+        }
+    }
+}
+?>
 
 
 	<!-- Related Products -->
@@ -793,133 +879,50 @@ $wishCount   = count($wishlist);
 			<!-- Slide2 -->
 			<div class="wrap-slick2">
 				<div class="slick2">
-					<div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
-						<!-- Block2 -->
-						<div class="block2">
-							<div class="block2-pic hov-img0">
-								<img src="images/product-01.jpg" alt="IMG-PRODUCT">
+    <?php if (!empty($related)): ?>
+        <?php foreach ($related as $item): ?>
+            <div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
+                <!-- Block2 -->
+                <div class="block2">
+                    <div class="block2-pic hov-img0">
+                        <img src="images/products/<?php echo htmlspecialchars($item['ten_anh']); ?>" alt="IMG-PRODUCT">
 
-								<a href="#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-									Xem nhanh
-								</a>
-							</div>
+                        <a href="product-detail.php?id=<?php echo (int)$item['ma_sp']; ?>"
+                           class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04">
+                            Xem chi tiết
+                        </a>
+                    </div>
 
-							<div class="block2-txt flex-w flex-t p-t-14">
-								<div class="block2-txt-child1 flex-col-l ">
-									<a href="product-detail.php" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-										Áo Esprit Ruffle
-									</a>
+                    <div class="block2-txt flex-w flex-t p-t-14">
+                        <div class="block2-txt-child1 flex-col-l ">
+                            <a href="product-detail.php?id=<?php echo (int)$item['ma_sp']; ?>"
+                               class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
+                                <?php echo htmlspecialchars($item['ten_sp']); ?>
+                            </a>
 
-									<span class="stext-105 cl3">
-										399.000₫
-									</span>
-								</div>
+                            <span class="stext-105 cl3">
+                                <?php echo $item['gia'] !== null ? number_format($item['gia']) . "₫" : "Liên hệ"; ?>
+                            </span>
+                        </div>
 
-								<div class="block2-txt-child2 flex-r p-t-3">
-									<a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-										<img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-										<img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-									</a>
-								</div>
-							</div>
-						</div>
-					</div>
+                        <div class="block2-txt-child2 flex-r p-t-3">
+                            <a href="javascript:void(0);"
+                               class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
+                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
+                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <p class="txt-center" style="width:100%;padding:20px 0;">
+            Chưa có sản phẩm liên quan trong danh mục này.
+        </p>
+    <?php endif; ?>
+</div>
 
-					<div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
-						<!-- Block2 -->
-						<div class="block2">
-							<div class="block2-pic hov-img0">
-								<img src="images/product-02.jpg" alt="IMG-PRODUCT">
-
-								<a href="#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-									Xem nhanh
-								</a>
-							</div>
-
-							<div class="block2-txt flex-w flex-t p-t-14">
-								<div class="block2-txt-child1 flex-col-l ">
-									<a href="product-detail.php" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-										Túi Herschel
-									</a>
-
-									<span class="stext-105 cl3">
-										899.000₫
-									</span>
-								</div>
-
-								<div class="block2-txt-child2 flex-r p-t-3">
-									<a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-										<img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-										<img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-									</a>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
-						<!-- Block2 -->
-						<div class="block2">
-							<div class="block2-pic hov-img0">
-								<img src="images/product-03.jpg" alt="IMG-PRODUCT">
-
-								<a href="#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-									Xem nhanh
-								</a>
-							</div>
-
-							<div class="block2-txt flex-w flex-t p-t-14">
-								<div class="block2-txt-child1 flex-col-l ">
-									<a href="product-detail.php" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-										Quần kẻ caro
-									</a>
-
-									<span class="stext-105 cl3">
-										650.000₫
-									</span>
-								</div>
-
-								<div class="block2-txt-child2 flex-r p-t-3">
-									<a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-										<img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-										<img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-									</a>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
-						<!-- Block2 -->
-						<div class="block2">
-							<div class="block2-pic hov-img0">
-								<img src="images/product-04.jpg" alt="IMG-PRODUCT">
-
-								<a href="#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-									Xem nhanh
-								</a>
-							</div>
-
-							<div class="block2-txt flex-w flex-t p-t-14">
-								<div class="block2-txt-child1 flex-col-l ">
-									<a href="product-detail.php" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-										Áo trench cổ điển
-									</a>
-
-									<span class="stext-105 cl3">
-										1.250.000₫
-									</span>
-								</div>
-
-								<div class="block2-txt-child2 flex-r p-t-3">
-									<a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-										<img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-										<img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-									</a>
-								</div>
-							</div>
-						</div>
-					</div>
 
 					<!-- Có thể giữ nguyên thêm các block2 khác, mình đã sửa 4 block đầu cho bạn làm mẫu -->
 				</div>
@@ -1148,24 +1151,52 @@ $wishCount   = count($wishlist);
 							
 							<!--  -->
 							<div class="p-t-33">
-								<div class="flex-w flex-r-m p-b-10">
-									<div class="size-203 flex-c-m respon6">
-										Kích cỡ
-									</div>
+	<!-- Kích cỡ -->
+	<div class="flex-w flex-r-m p-b-10">
+		<div class="size-203 flex-c-m respon6">
+			Kích cỡ
+		</div>
 
-									<div class="size-204 respon6-next">
-										<div class="rs1-select2 bor8 bg0">
-											<select class="js-select2" name="size">
-												<option>Chọn kích cỡ</option>
-												<option>Size S</option>
-												<option>Size M</option>
-												<option>Size L</option>
-												<option>Size XL</option>
-											</select>
-											<div class="dropDownSelect2"></div>
-										</div>
-									</div>
-								</div>
+		<div class="size-204 respon6-next">
+			<div class="rs1-select2 bor8 bg0">
+				<select class="js-select2" name="size">
+					<option value="">Chọn kích cỡ</option>
+					<?php if (!empty($sizes)): ?>
+						<?php foreach ($sizes as $kc): ?>
+							<option><?php echo htmlspecialchars($kc); ?></option>
+						<?php endforeach; ?>
+					<?php else: ?>
+						<option disabled>Đang cập nhật</option>
+					<?php endif; ?>
+				</select>
+				<div class="dropDownSelect2"></div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Màu sắc -->
+	<div class="flex-w flex-r-m p-b-10">
+		<div class="size-203 flex-c-m respon6">
+			Màu sắc
+		</div>
+
+		<div class="size-204 respon6-next">
+			<div class="rs1-select2 bor8 bg0">
+				<select class="js-select2" name="color">
+					<option value="">Chọn màu sắc</option>
+					<?php if (!empty($colors)): ?>
+						<?php foreach ($colors as $mau): ?>
+							<option><?php echo htmlspecialchars($mau); ?></option>
+						<?php endforeach; ?>
+					<?php else: ?>
+						<option disabled>Đang cập nhật</option>
+					<?php endif; ?>
+				</select>
+				<div class="dropDownSelect2"></div>
+			</div>
+		</div>
+	</div>
+
 
 								<div class="flex-w flex-r-m p-b-10">
 									<div class="size-203 flex-c-m respon6">
