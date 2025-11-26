@@ -388,12 +388,19 @@ $wishCount   = count($wishlist);
 					<img src="images/icons/icon-close2.png" alt="Đóng">
 				</button>
 
-				<form class="wrap-search-header flex-w p-l-15">
-					<button class="flex-c-m trans-04">
-						<i class="zmdi zmdi-search"></i>
-					</button>
-					<input class="plh3" type="text" name="search" placeholder="Tìm kiếm...">
-				</form>
+				<form class="wrap-search-header flex-w p-l-15"
+      method="get"
+      action="product.php">
+    <button class="flex-c-m trans-04">
+        <i class="zmdi zmdi-search"></i>
+    </button>
+    <input class="plh3"
+           type="text"
+           name="q"
+           placeholder="Tìm kiếm sản phẩm..."
+           value="<?php echo isset($_GET['q']) ? htmlspecialchars($_GET['q']) : ''; ?>">
+</form>
+
 			</div>
 		</div>
 	</header>
@@ -404,6 +411,7 @@ $wishCount   = count($wishlist);
 <div id="mini-wishlist-container">
     <?php include 'mini_wishlist.php'; ?>
 </div>
+<?php include 'search_modal.php'; ?>
 
 		
 

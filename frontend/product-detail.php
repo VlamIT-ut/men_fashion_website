@@ -460,6 +460,7 @@ $wishCount   = count($wishlist);
 <div id="mini-wishlist-container">
     <?php include 'mini_wishlist.php'; ?>
 </div>
+<?php include 'search_modal.php'; ?>
 
 
 

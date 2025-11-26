@@ -12,7 +12,35 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
     }
     return $default;
 }
+// Biến cờ để biết có gửi form thành công không
+$contactSuccess = false;
+
+// Nếu vừa redirect từ form gửi thành công
+if (!empty($_SESSION['contact_success'])) {
+    $contactSuccess = true;
+    unset($_SESSION['contact_success']);
+}
+
+// Xử lý khi form được submit
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = trim($_POST['email'] ?? '');
+    $msg   = trim($_POST['msg'] ?? '');
+
+    if ($email !== '' && $msg !== '') {
+        // TODO: nếu sau này muốn lưu DB hoặc gửi mail thì làm ở đây
+
+        // Đánh dấu thành công rồi redirect để tránh resubmit
+        $_SESSION['contact_success'] = true;
+
+        // Sau khi gửi xong thì cho form rỗng lại:
+        header('Location: contact.php');
+        exit;
+    }
+}
+
+
 ?>
+
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -335,12 +363,19 @@ $wishCount   = count($wishlist);
 					<img src="images/icons/icon-close2.png" alt="CLOSE">
 				</button>
 
-				<form class="wrap-search-header flex-w p-l-15">
-					<button class="flex-c-m trans-04">
-						<i class="zmdi zmdi-search"></i>
-					</button>
-					<input class="plh3" type="text" name="search" placeholder="Tìm kiếm...">
-				</form>
+				<form class="wrap-search-header flex-w p-l-15"
+      method="get"
+      action="product.php">
+    <button class="flex-c-m trans-04">
+        <i class="zmdi zmdi-search"></i>
+    </button>
+    <input class="plh3"
+           type="text"
+           name="q"
+           placeholder="Tìm kiếm sản phẩm..."
+           value="<?php echo isset($_GET['q']) ? htmlspecialchars($_GET['q']) : ''; ?>">
+</form>
+
 			</div>
 		</div>
 	</header>
@@ -350,6 +385,7 @@ $wishCount   = count($wishlist);
 <div id="mini-wishlist-container">
     <?php include 'mini_wishlist.php'; ?>
 </div>
+<?php include 'search_modal.php'; ?>
 
 
 	<!-- Title page -->
@@ -370,14 +406,18 @@ $wishCount   = count($wishlist);
 							Gửi tin nhắn cho chúng tôi
 						</h4>
 
-						<div class="bor8 m-b-20 how-pos4-parent">
-							<input class="stext-111 cl2 plh3 size-116 p-l-62 p-r-30" type="text" name="email" placeholder="Địa chỉ email của bạn">
-							<img class="how-pos4 pointer-none" src="images/icons/icon-email.png" alt="ICON">
-						</div>
+						<input class="stext-111 cl2 plh3 size-116 p-l-62 p-r-30"
+       type="text"
+       name="email"
+       placeholder="Địa chỉ email của bạn"
+       value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>">
 
-						<div class="bor8 m-b-30">
-							<textarea class="stext-111 cl2 plh3 size-120 p-lr-28 p-tb-25" name="msg" placeholder="Chúng tôi có thể giúp gì cho bạn?"></textarea>
-						</div>
+<textarea class="stext-111 cl2 plh3 size-120 p-lr-28 p-tb-25"
+          name="msg"
+          placeholder="Chúng tôi có thể giúp gì cho bạn?"><?php
+    echo isset($msg) ? htmlspecialchars($msg) : '';
+?></textarea>
+
 
 						<button class="flex-c-m stext-101 cl0 size-121 bg3 bor1 hov-btn3 p-lr-15 trans-04 pointer">
 							Gửi
@@ -636,7 +676,13 @@ $wishCount   = count($wishlist);
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAKFWBqlKAGCeS1rMVoaNlwyayu0e0YRes"></script>
 	<script src="js/map-custom.js"></script>
 <!--===============================================================================================-->
-	<script src="js/main.js"></script>
+<?php if (!empty($contactSuccess)): ?>
+<script>
+    alert('Cảm ơn bạn đã góp ý! Chúng tôi đã nhận được phản hồi của bạn.');
+</script>
+<?php endif; ?>
+	
+<script src="js/main.js"></script>
 
 </body>
 </html>

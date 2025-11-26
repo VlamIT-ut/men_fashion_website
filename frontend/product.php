@@ -539,6 +539,9 @@ if (isset($_POST['lay_thong_tin_sp_ajax']) && isset($_POST['ma_sp'])) {
 <div id="mini-wishlist-container">
     <?php include 'mini_wishlist.php'; ?>
 </div>
+
+<?php include 'search_modal.php'; ?>
+
 <?php if (!empty($_SESSION['show_wishlist'])): ?>
     <script>
         // tự mở panel wishlist sau khi thả tim xong
@@ -571,6 +574,8 @@ $sort       = isset($_GET['sort']) ? $_GET['sort'] : 'default';
 $price_from = isset($_GET['price_from']) ? (int)$_GET['price_from'] : null;
 $price_to   = isset($_GET['price_to'])   ? (int)$_GET['price_to']   : null;
 $color      = isset($_GET['color']) ? trim($_GET['color']) : null;
+$keyword    = isset($_GET['q']) ? trim($_GET['q']) : '';
+
 
 // ORDER BY
 switch ($sort) {
@@ -600,6 +605,12 @@ if ($color) {
     $joinColor = true;
     $whereParts[] = "ms.ten_mau = '$colorEsc'";
 }
+if ($keyword !== '') {
+    $kwEsc = mysqli_real_escape_string($conn, $keyword);
+    // tìm theo tên sản phẩm hoặc mô tả
+    $whereParts[] = "(sp.ten_sp LIKE '%$kwEsc%' OR sp.mota LIKE '%$kwEsc%')";
+}
+
 
 $fromClause = " FROM san_pham sp";
 if ($joinColor) {
@@ -693,15 +704,20 @@ $wishlist = $_SESSION['wishlist'] ?? [];
 				</div>
 				
 				<!-- Search product (hiện form thôi, xử lý thêm sau nếu muốn) -->
-				<div class="dis-none panel-search w-full p-t-10 p-b-15">
-					<div class="bor8 dis-flex p-l-15">
-						<button class="size-113 flex-c-m fs-16 cl2 hov-cl1 trans-04">
-							<i class="zmdi zmdi-search"></i>
-						</button>
+		<div class="dis-none panel-search w-full p-t-10 p-b-15">
+    <form class="bor8 dis-flex p-l-15" method="get" action="product.php">
+        <button class="size-113 flex-c-m fs-16 cl2 hov-cl1 trans-04">
+            <i class="zmdi zmdi-search"></i>
+        </button>
 
-						<input class="mtext-107 cl2 size-114 plh2 p-r-15" type="text" name="search-product" placeholder="Tìm kiếm">
-					</div>	
-				</div>
+        <input class="mtext-107 cl2 size-114 plh2 p-r-15"
+               type="text"
+               name="q"
+               placeholder="Tìm kiếm"
+               value="<?php echo isset($_GET['q']) ? htmlspecialchars($_GET['q']) : ''; ?>">
+    </form>
+</div>
+
 
 				<!-- PANEL FILTER (SẮP XẾP, GIÁ, MÀU) -->
 				<div class="dis-none panel-filter w-full p-t-10">

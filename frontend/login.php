@@ -4,14 +4,12 @@ include "db.php";
 
 $error = "";
 
-// Nếu đã đăng nhập rồi thì không cho vào lại trang login
 if (isset($_SESSION["user"])) {
     header("Location: index.php");
     exit;
 }
 
 if (isset($_POST["btnUserLogin"])) {
-    // Có thể là email HOẶC số điện thoại
     $input = trim($_POST["username"]);
     $pass  = trim($_POST["password"]);
 
@@ -19,9 +17,9 @@ if (isset($_POST["btnUserLogin"])) {
         $error = "Vui lòng nhập đầy đủ thông tin!";
     } else {
 
-        // Tìm theo email hoặc sdt
         $sql = "SELECT * FROM khach_hang 
                 WHERE email = ? OR sdt = ?
+                AND trang_thai = 1
                 LIMIT 1";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "ss", $input, $input);
@@ -31,20 +29,26 @@ if (isset($_POST["btnUserLogin"])) {
         if ($row = mysqli_fetch_assoc($result)) {
 
             // Nếu sau này dùng md5: if (md5($pass) === $row["matkhau"])
-            if ($pass === $row["matkhau"]) {
-
-                $_SESSION["user"] = [
-                    "id"    => $row["ma_kh"],
-                    "HoTen" => $row["ho_ten"],
-                    "Email" => $row["email"],
-                    "SDT"   => $row["sdt"]
-                ];
-
-                header("Location: index.php");
-                exit;
+                if ((int)$row["trang_thai"] === 0) {
+                $error = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
             } else {
-                $error = "Sai mật khẩu!";
+                // 2. Kiểm tra mật khẩu (đang dùng md5)
+                if (md5($pass) === $row["matkhau"]) {
+
+                    $_SESSION["user"] = [
+                        "id"    => $row["ma_kh"],
+                        "HoTen" => $row["ho_ten"],
+                        "Email" => $row["email"],
+                        "SDT"   => $row["sdt"]
+                    ];
+
+                    header("Location: index.php");
+                    exit;
+                } else {
+                    $error = "Sai mật khẩu!";
+                }
             }
+
         } else {
             $error = "Email hoặc số điện thoại không tồn tại!";
         }
@@ -195,8 +199,8 @@ if (isset($_POST["btnUserLogin"])) {
 <div class="auth-wrapper">
     <div class="auth-card">
         <div class="brand">
-            <div class="brand-logo">FS</div>
-            <div class="brand-title">Fashion Store</div>
+            <div class="brand-logo">CS</div>
+            <div class="brand-title">COZA STORE</div>
             <div class="brand-subtitle">Đăng nhập để tiếp tục mua sắm</div>
         </div>
 
