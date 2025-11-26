@@ -169,8 +169,6 @@ foreach ($cart as $it) {
     <i class="zmdi zmdi-shopping-cart"></i>
 </div>
 
-							<i class="zmdi zmdi-shopping-cart"></i>
-						</div>
 
 						<?php
 $wishlist    = $_SESSION['wishlist'] ?? [];
@@ -212,8 +210,6 @@ foreach ($cart as $it) {
     <i class="zmdi zmdi-shopping-cart"></i>
 </div>
 
-					<i class="zmdi zmdi-shopping-cart"></i>
-				</div>
 
 				<?php
 $wishlist    = $_SESSION['wishlist'] ?? [];

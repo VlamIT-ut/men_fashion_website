@@ -1045,6 +1045,42 @@ $wishlist = $_SESSION['wishlist'] ?? [];
 
 <!--===============================================================================================-->	
 	<script src="vendor/jquery/jquery-3.2.1.min.js"></script>
+	<script>
+// Bỏ thích ngay trong mini favourite (panel wishlist)
+// Bỏ thích ngay trong mini favourite (panel wishlist)
+$(document).on('click', '.js-remove-wish', function(e){
+    e.preventDefault();
+
+    var id = $(this).data('id');
+
+    $.post('wishlist_action.php', {
+        id: id,
+        action: 'remove',
+        ajax: 1
+    }, function(res){
+        if (res.status === 'success') {
+
+            // Cập nhật lại HTML mini wishlist
+            $('#mini-wishlist-container').html(res.mini_wishlist_html);
+
+            // Cập nhật badge số tim trên icon header
+            $('.js-show-wishlist').attr('data-notify', res.wish_count);
+
+            // ✅ QUAN TRỌNG: xoá class tim xanh trong danh sách sản phẩm
+            var heart = $('.btn-addwish-b2[href*="id=' + id + '"]');
+
+            heart.removeClass('js-addedwish-b2');
+        } 
+        else {
+            alert(res.message || 'Có lỗi khi xoá khỏi yêu thích.');
+        }
+    }, 'json').fail(function(){
+        alert('Không gọi được wishlist_action.php');
+    });
+});
+
+</script>
+
 <!--===============================================================================================-->
 	<script src="vendor/animsition/js/animsition.min.js"></script>
 <!--===============================================================================================-->

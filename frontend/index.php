@@ -11,9 +11,36 @@ include 'db.php';
 if (!isset($conn) || !$conn) {
     die("Không kết nối được CSDL");
 }
-
-$sql = "SELECT * FROM san_pham WHERE ton_tai = 1 ORDER BY ma_sp DESC";
+// Lấy tối đa 8 sản phẩm nổi bật để hiển thị ở trang chủ
+$sql = "
+    SELECT sp.ma_sp, sp.ten_sp, sp.gia, sp.ma_loaisp,
+           MIN(img.ten_anh) AS ten_anh
+    FROM san_pham sp
+    LEFT JOIN hinhanh_sp img ON sp.ma_sp = img.ma_sp
+    WHERE sp.ton_tai = b'1'
+    GROUP BY sp.ma_sp, sp.ten_sp, sp.gia, sp.ma_loaisp
+    ORDER BY sp.ma_sp DESC
+    LIMIT 8
+";
 $result_products = mysqli_query($conn, $sql);
+
+if (!$result_products) {
+    die('Lỗi truy vấn sản phẩm: ' . mysqli_error($conn));
+}
+
+// Wishlist để check tim
+$wishlist = $_SESSION['wishlist'] ?? [];
+
+// Lấy danh mục sản phẩm (dùng cho thanh phân loại ở trang chủ)
+$sqlCat = "SELECT ma_loaisp, ten_loai FROM loai_sp ORDER BY ma_loaisp ASC";
+$rsCat  = mysqli_query($conn, $sqlCat);
+$categories = [];
+if ($rsCat) {
+    while ($row = mysqli_fetch_assoc($rsCat)) {
+        $categories[] = $row;
+    }
+}
+
 
 if (!$result_products) {
     die("Lỗi truy vấn: " . mysqli_error($conn));
@@ -183,30 +210,29 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
 							<i class="zmdi zmdi-search"></i>
 						</div>
 
-						<div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-cart"<?php
-$cart = $_SESSION['cart'] ?? [];
-$badge = 0;
-foreach ($cart as $it) {
-    $badge += (int)($it['qty'] ?? 1);
-}
-?>
-<div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-cart"
-     data-notify="<?php echo $badge; ?>">
-    <i class="zmdi zmdi-shopping-cart"></i>
-</div>
-
+					<div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-cart"<?php
+						$cart = $_SESSION['cart'] ?? [];
+						$badge = 0;
+						foreach ($cart as $it) {
+							$badge += (int)($it['qty'] ?? 1);
+						}
+						?>
+						<div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-cart"
+							data-notify="<?php echo $badge; ?>">
+							<i class="zmdi zmdi-shopping-cart"></i>
 						</div>
 
-						<?php
-$wishlist    = $_SESSION['wishlist'] ?? [];
-$wishCount   = count($wishlist);
-?>
-<a href="javascript:void(0);"
-   class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-wishlist"
-   data-notify="<?php echo $wishCount; ?>">
-    <i class="zmdi zmdi-favorite-outline"></i>
-</a>
+					</div>
 
+													<?php
+							$wishlist    = $_SESSION['wishlist'] ?? [];
+							$wishCount   = count($wishlist);
+							?>
+							<a href="javascript:void(0);"
+							class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-wishlist"
+							data-notify="<?php echo $wishCount; ?>">
+								<i class="zmdi zmdi-favorite-outline"></i>
+							</a>
 					</div>
 				</nav>
 			</div>	
@@ -236,9 +262,6 @@ foreach ($cart as $it) {
      data-notify="<?php echo $badge; ?>">
     <i class="zmdi zmdi-shopping-cart"></i>
 </div>
-
-					<i class="zmdi zmdi-shopping-cart"></i>
-				</div>
 
 				<?php
 $wishlist    = $_SESSION['wishlist'] ?? [];
@@ -556,318 +579,81 @@ $wishCount   = count($wishlist);
 				</h3>
 			</div>
 
-			<div class="flex-w flex-sb-m p-b-52">
-				<div class="flex-w flex-l-m filter-tope-group m-tb-10">
-					<button class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5 how-active1" data-filter="*">
-						Tất cả sản phẩm
-					</button>
+			<div class="flex-w flex-l-m filter-tope-group m-tb-10">
+    <!-- Tất cả: dẫn sang product.php hiển thị toàn bộ -->
+    <a href="product.php"
+       class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5 how-active1">
+        Tất cả sản phẩm
+    </a>
 
-					<button class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5" data-filter=".shirts">
-						Áo sơ mi nam
-					</button>
+    <?php foreach ($categories as $dm): ?>
+        <a href="product.php?category=<?php echo (int)$dm['ma_loaisp']; ?>"
+           class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5">
+            <?php echo htmlspecialchars($dm['ten_loai']); ?>
+        </a>
+    <?php endforeach; ?>
+</div>
 
-					<button class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5" data-filter=".suits">
-						Vest & Blazer
-					</button>
-
-					<button class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5" data-filter=".pants">
-						Quần tây nam
-					</button>
-
-					<button class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5" data-filter=".polo">
-						Áo polo
-					</button>
-
-					<button class="stext-106 cl6 hov1 bor3 trans-04 m-r-32 m-tb-5" data-filter=".accessories">
-						Phụ kiện nam
-					</button>
-				</div>
-
-				<div class="flex-w flex-c-m m-tb-10">
-					<div class="flex-c-m stext-106 cl6 size-104 bor4 pointer hov-btn3 trans-04 m-r-8 m-tb-4 js-show-filter">
-						<i class="icon-filter cl2 m-r-6 fs-15 trans-04 zmdi zmdi-filter-list"></i>
-						<i class="icon-close-filter cl2 m-r-6 fs-15 trans-04 zmdi zmdi-close dis-none"></i>
-							 Bộ lọc
-						</div>
-
-					<div class="flex-c-m stext-106 cl6 size-105 bor4 pointer hov-btn3 trans-04 m-tb-4 js-show-search">
-						<i class="icon-search cl2 m-r-6 fs-15 trans-04 zmdi zmdi-search"></i>
-						<i class="icon-close-search cl2 m-r-6 fs-15 trans-04 zmdi zmdi-close dis-none"></i>
-						Tìm
-						</div>
-				</div>
-				
-				<!-- Search product -->
-				<div class="dis-none panel-search w-full p-t-10 p-b-15">
-					<div class="bor8 dis-flex p-l-15">
-						<button class="size-113 flex-c-m fs-16 cl2 hov-cl1 trans-04">
-							<i class="zmdi zmdi-search"></i>
-						</button>
-
-						<input class="mtext-107 cl2 size-114 plh2 p-r-15" type="text" name="search-product" placeholder="Tìm sản phẩm...">
-					</div>	
-				</div>
-
-				<!-- Filter -->
-				<div class="dis-none panel-filter w-full p-t-10">
-					<div class="wrap-filter flex-w bg6 w-full p-lr-40 p-t-27 p-lr-15-sm">
-						<div class="filter-col1 p-r-15 p-b-27">
-							<div class="mtext-102 cl2 p-b-15">
-								Sắp xếp theo
-							</div>
-
-							<ul>
-								<ul class="main-menu">
-									<li class="active-menu">
-										<a href="index.php">Trang chủ</a>
-									</li>
-
-									<li>
-										<a href="product.php">Cửa hàng</a>
-									</li>
-
-									<li class="label1" data-label1="hot">
-										<a href="shoping-cart.php">Tính năng</a>
-									</li>
-
-									<li>
-										<a href="blog.php">Blog</a>
-									</li>
-
-									<li>
-										<a href="about.php">Giới thiệu</a>
-									</li>
-
-									<li>
-										<a href="contact.php">Liên hệ</a>
-									</li>
-								</ul>
-								<li class="p-b-6">
-									<a href="#" class="filter-link stext-106 trans-04">
-										Giá: Cao đến Thấp
-									</a>
-								</li>
-							</ul>
-						</div>
-
-						<div class="filter-col2 p-r-15 p-b-27">
-							<div class="mtext-102 cl2 p-b-15">
-								Giá
-							</div>
-
-							<ul>
-								<li class="p-b-6">
-									<a href="#" class="filter-link stext-106 trans-04 filter-link-active">
-										Tất cả
-									</a>
-								</li>
-
-								<li class="p-b-6">
-									<a href="#" class="filter-link stext-106 trans-04">
-										$0.00 - $50.00
-									</a>
-								</li>
-
-								<li class="p-b-6">
-									<a href="#" class="filter-link stext-106 trans-04">
-										$50.00 - $100.00
-									</a>
-								</li>
-
-								<li class="p-b-6">
-									<a href="#" class="filter-link stext-106 trans-04">
-										$100.00 - $150.00
-									</a>
-								</li>
-
-								<li class="p-b-6">
-									<a href="#" class="filter-link stext-106 trans-04">
-										$150.00 - $200.00
-									</a>
-								</li>
-
-								<li class="p-b-6">
-									<a href="#" class="filter-link stext-106 trans-04">
-										$200.00+
-									</a>
-								</li>
-							</ul>
-						</div>
-
-						<div class="filter-col3 p-r-15 p-b-27">
-							<div class="mtext-102 cl2 p-b-15">
-								Màu sắc
-							</div>
-
-							<ul>
-								<li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #222;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
-
-									<a href="#" class="filter-link stext-106 trans-04">
-											Đen
-										</a>
-								</li>
-
-								<li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #4272d7;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
-
-									<a href="#" class="filter-link stext-106 trans-04 filter-link-active">
-										Xanh
-									</a>
-								</li>
-
-								<li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #b3b3b3;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
-
-									<a href="#" class="filter-link stext-106 trans-04">
-										Xám
-									</a>
-								</li>
-
-								<li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #00ad5f;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
-
-									<a href="#" class="filter-link stext-106 trans-04">
-										Xanh lá
-									</a>
-								</li>
-
-								<li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #fa4251;">
-										<i class="zmdi zmdi-circle"></i>
-									</span>
-
-									<a href="#" class="filter-link stext-106 trans-04">
-										Đỏ
-									</a>
-								</li>
-
-								<li class="p-b-6">
-									<span class="fs-15 lh-12 m-r-6" style="color: #aaa;">
-										<i class="zmdi zmdi-circle-o"></i>
-									</span>
-
-									<a href="#" class="filter-link stext-106 trans-04">
-										Trắng
-									</a>
-								</li>
-							</ul>
-						</div>
-
-						<div class="filter-col4 p-b-27">
-							<div class="mtext-102 cl2 p-b-15">
-								Tags
-							</div>
-
-							<div class="flex-w p-t-4 m-r--5">
-								<a href="#" class="flex-c-m stext-107 cl6 size-301 bor7 p-lr-15 hov-tag1 trans-04 m-r-5 m-b-5">
-									Thời trang
-								</a>
-
-								<a href="#" class="flex-c-m stext-107 cl6 size-301 bor7 p-lr-15 hov-tag1 trans-04 m-r-5 m-b-5">
-									Lối sống
-								</a>
-
-								<a href="#" class="flex-c-m stext-107 cl6 size-301 bor7 p-lr-15 hov-tag1 trans-04 m-r-5 m-b-5">
-									Jean
-								</a>
-
-								<a href="#" class="flex-c-m stext-107 cl6 size-301 bor7 p-lr-15 hov-tag1 trans-04 m-r-5 m-b-5">
-									Thời trang đường phố
-								</a>
-
-								<a href="#" class="flex-c-m stext-107 cl6 size-301 bor7 p-lr-15 hov-tag1 trans-04 m-r-5 m-b-5">
-									Thủ công
-								</a>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
 	</section>
-            <!-- ====== LIST SẢN PHẨM NỔI BẬT ====== -->
-            <div class="row isotope-grid">
-                <?php
-                // Nếu cần chắc chắn con trỏ ở đầu result
-                if ($result_products && mysqli_num_rows($result_products) > 0) {
-                    mysqli_data_seek($result_products, 0);
-                    while ($p = mysqli_fetch_assoc($result_products)) {
+          
+	<!-- ====== LIST SẢN PHẨM NỔI BẬT ====== -->
+<div class="row isotope-grid">
+    <?php if (!$result_products || mysqli_num_rows($result_products) == 0): ?>
+        <p class="p-l-15">Chưa có sản phẩm nổi bật nào.</p>
+    <?php else: ?>
+        <?php while ($row = mysqli_fetch_assoc($result_products)): 
+            // Đường dẫn ảnh giống y product.php
+            $imgFile = !empty($row['ten_anh']) ? $row['ten_anh'] : 'product-01.jpg';
+            $isLiked = isset($wishlist[$row['ma_sp']]);
+        ?>
+            <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item"
+                 data-price="<?php echo (int)$row['gia']; ?>">
+                <div class="block2">
+                    <div class="block2-pic hov-img0">
+                        <!-- CHÚ Ý: dùng images/ chứ không phải images/products/ -->
+                        <img src="images/<?php echo htmlspecialchars($imgFile); ?>" alt="IMG-PRODUCT">
 
-                        // Lấy 1 ảnh cho sản phẩm
-                        $img = 'product-01.jpg'; // ảnh mặc định
-                        $sqlImg = "SELECT ten_anh FROM hinhanh_sp 
-                                   WHERE ma_sp = " . (int)$p['ma_sp'] . " 
-                                   LIMIT 1";
-                        $rsImg = mysqli_query($conn, $sqlImg);
-                        if ($rsImg && mysqli_num_rows($rsImg) > 0) {
-                            $rowImg = mysqli_fetch_assoc($rsImg);
-                            if (!empty($rowImg['ten_anh'])) {
-                                $img = $rowImg['ten_anh'];
-                            }
-                        }
+                        <a href="product-detail.php?id=<?php echo (int)$row['ma_sp']; ?>"
+                           class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04">
+                            Xem chi tiết
+                        </a>
+                    </div>
 
-                        // Nếu có cột loại sản phẩm thì map ra class cho isotope
-                        // Ở đây mình để đơn giản: tất cả đều là .shirts
-                        $itemClass = 'shirts';
-                ?>
-                <div class="col-sm-6 col-md-4 col-lg-3 p-b-35 isotope-item <?php echo $itemClass; ?>">
-                    <div class="block2">
-                        <div class="block2-pic hov-img0">
-                            <img src="images/products/<?php echo htmlspecialchars($img); ?>" alt="IMG-PRODUCT">
-
-                            <a href="product-detail.php?id=<?php echo (int)$p['ma_sp']; ?>"
-                               class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04">
-                                Xem chi tiết
+                    <div class="block2-txt flex-w flex-t p-t-14">
+                        <div class="block2-txt-child1 flex-col-l ">
+                            <a href="product-detail.php?id=<?php echo (int)$row['ma_sp']; ?>"
+                               class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
+                                <?php echo htmlspecialchars($row['ten_sp']); ?>
                             </a>
+
+                            <span class="stext-105 cl3">
+                                <?php
+                                if ($row['gia'] !== null) {
+                                    echo number_format($row['gia']) . '₫';
+                                } else {
+                                    echo 'Liên hệ';
+                                }
+                                ?>
+                            </span>
                         </div>
 
-                        <div class="block2-txt flex-w flex-t p-t-14">
-                            <div class="block2-txt-child1 flex-col-l ">
-                                <a href="product-detail.php?id=<?php echo (int)$p['ma_sp']; ?>"
-                                   class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-                                    <?php echo htmlspecialchars($p['ten_sp']); ?>
-                                </a>
-
-                                <span class="stext-105 cl3">
-                                    <?php
-                                    if ($p['gia'] !== null) {
-                                        echo number_format($p['gia']) . '₫';
-                                    } else {
-                                        echo 'Liên hệ';
-                                    }
-                                    ?>
-                                </span>
-                            </div>
-
-                            <div class="block2-txt-child2 flex-r p-t-3">
-                                <a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-                                    <img class="icon-heart1 dis-block trans-04"
-                                         src="images/icons/icon-heart-01.png" alt="ICON">
-                                    <img class="icon-heart2 dis-block trans-04 ab-t-l"
-                                         src="images/icons/icon-heart-02.png" alt="ICON">
-                                </a>
-                            </div>
+                        <div class="block2-txt-child2 flex-r p-t-3">
+                            <a href="wishlist_action.php?id=<?php echo (int)$row['ma_sp']; ?>"
+                               class="btn-addwish-b2 dis-block pos-relative <?php echo $isLiked ? 'js-addedwish-b2' : ''; ?>">
+                                <img class="icon-heart1 dis-block trans-04"
+                                     src="images/icons/icon-heart-01.png" alt="ICON">
+                                <img class="icon-heart2 dis-block trans-04 ab-t-l"
+                                     src="images/icons/icon-heart-02.png" alt="ICON">
+                            </a>
                         </div>
                     </div>
                 </div>
-                <?php
-                    } // end while
-                } else {
-                    echo '<div class="col-12 p-t-40 p-b-40 text-center">
-                            Chưa có sản phẩm nào. <a href="product.php" class="cl1">Xem tất cả sản phẩm</a>
-                          </div>';
-                }
-                ?>
             </div>
-            <!-- ====== /LIST SẢN PHẨM NỔI BẬT ====== -->
+        <?php endwhile; ?>
+    <?php endif; ?>
+</div>
+<!-- ====== /LIST SẢN PHẨM NỔI BẬT ====== -->
+
 
 
 	<!-- Footer -->
@@ -1183,6 +969,42 @@ $wishCount   = count($wishlist);
 
 <!--===============================================================================================-->	
 	<script src="vendor/jquery/jquery-3.2.1.min.js"></script>
+	<script>
+// Bỏ thích ngay trong mini favourite (panel wishlist)
+// Bỏ thích ngay trong mini favourite (panel wishlist)
+$(document).on('click', '.js-remove-wish', function(e){
+    e.preventDefault();
+
+    var id = $(this).data('id');
+
+    $.post('wishlist_action.php', {
+        id: id,
+        action: 'remove',
+        ajax: 1
+    }, function(res){
+        if (res.status === 'success') {
+
+            // Cập nhật lại HTML mini wishlist
+            $('#mini-wishlist-container').html(res.mini_wishlist_html);
+
+            // Cập nhật badge số tim trên icon header
+            $('.js-show-wishlist').attr('data-notify', res.wish_count);
+
+            // ✅ QUAN TRỌNG: xoá class tim xanh trong danh sách sản phẩm
+            var heart = $('.btn-addwish-b2[href*="id=' + id + '"]');
+
+            heart.removeClass('js-addedwish-b2');
+        } 
+        else {
+            alert(res.message || 'Có lỗi khi xoá khỏi yêu thích.');
+        }
+    }, 'json').fail(function(){
+        alert('Không gọi được wishlist_action.php');
+    });
+});
+
+</script>
+
 <!--===============================================================================================-->
 	<script src="vendor/animsition/js/animsition.min.js"></script>
 <!--===============================================================================================-->
@@ -1279,7 +1101,48 @@ $wishCount   = count($wishlist);
 				ps.update();
 			})
 		});
+	
 	</script>
+
+	<script>
+// MỞ / ĐÓNG MINI WISHLIST (panel bên phải)
+$(document).on('click', '.js-show-wishlist', function(e){
+    e.preventDefault();
+    $('.js-panel-wishlist').addClass('show-header-cart');
+});
+
+$(document).on('click', '.js-hide-wishlist', function(e){
+    e.preventDefault();
+    $('.js-panel-wishlist').removeClass('show-header-cart');
+});
+
+// Nếu muốn hiệu ứng thả tim + swal giống product.php:
+$('.js-addwish-b2').on('click', function(e){
+    e.preventDefault();
+});
+
+$('.js-addwish-b2').each(function(){
+    var nameProduct = $(this).parent().parent().find('.js-name-b2').html();
+    $(this).on('click', function(){
+        swal(nameProduct, " đã được thêm vào danh sách yêu thích!", "success");
+
+        $(this).addClass('js-addedwish-b2');
+        $(this).off('click');
+    });
+});
+
+$('.js-addwish-detail').each(function(){
+    var nameProduct = $(this).parent().parent().parent().find('.js-name-detail').html();
+
+    $(this).on('click', function(){
+        swal(nameProduct, " đã được thêm vào danh sách yêu thích!", "success");
+
+        $(this).addClass('js-addedwish-detail');
+        $(this).off('click');
+    });
+});
+</script>
+
 <!--===============================================================================================-->
 	<script src="js/main.js"></script>
 
