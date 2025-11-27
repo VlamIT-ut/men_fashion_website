@@ -132,17 +132,15 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
 								<a href="index.php">Trang chủ</a>
 							</li>
 
-							<li>
+							<li  class="label1" data-label1="hot">
 								<a href="product.php">Sản phẩm</a>
 							</li>
 
-							<li class="label1" data-label1="hot">
+							<li>
 								<a href="shoping-cart.php">Giỏ hàng</a>
 							</li>
 
-							<li>
-								<a href="blog.php">Blog</a>
-							</li>
+
 
 							<li class="active-menu">
 								<a href="about.php">Giới thiệu</a>
@@ -160,17 +158,19 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
 							<i class="zmdi zmdi-search"></i>
 						</div>
 
-						<div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-cart"  <?php
-$cart = $_SESSION['cart'] ?? [];
-$badge = 0;
-foreach ($cart as $it) {
-    $badge += (int)($it['qty'] ?? 1);
-}
-?>
-<div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-cart"
-     data-notify="<?php echo $badge; ?>">
-    <i class="zmdi zmdi-shopping-cart"></i>
-</div>
+						<div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-cart">
+						<?php
+							$cart = $_SESSION['cart'] ?? [];
+							$badge = 0;
+							foreach ($cart as $it) {
+								$badge += (int)($it['qty'] ?? 1);
+							}
+							?>
+						</div>
+							<div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-cart"
+								data-notify="<?php echo $badge; ?>">
+								<i class="zmdi zmdi-shopping-cart"></i>
+							</div>
 
 
 						<?php
@@ -316,10 +316,6 @@ $wishCount   = count($wishlist);
 				</li>
 
 				<li>
-					<a href="blog.php">Blog</a>
-				</li>
-
-				<li>
 					<a href="about.php">Giới thiệu</a>
 				</li>
 
@@ -363,7 +359,7 @@ $wishCount   = count($wishlist);
 
 
 	<!-- Title page -->
-	<section class="bg-img1 txt-center p-lr-15 p-tb-92" style="background-image: url('images/bg-01.jpg');">
+	<section class="bg-img1 txt-center p-lr-15 p-tb-92" style="background-image: url('images/bg-02.jpg');">
 		<h2 class="ltext-105 cl0 txt-center">
 			Giới thiệu
 		</h2>
@@ -381,15 +377,10 @@ $wishCount   = count($wishlist);
 						</h3>
 
 						<p class="stext-113 cl6 p-b-26">
-							Thành lập vào năm 2023, Men's Elegance tự hào là điểm đến thời trang cao cấp dành cho quý ông. Với sứ mệnh nâng tầm phong cách thời trang nam giới Việt Nam, chúng tôi mang đến những bộ sưu tập từ trang phục công sở lịch lãm đến casual năng động, đáp ứng mọi nhu cầu của khách hàng.
+							Coza Store là cửa hàng thời trang nam ra đời với tinh thần đa dạng và luôn cập nhật xu hướng. Từ những bộ trang phục tối giản thanh lịch đến phong cách đường phố cá tính hay năng động thể thao, Coza tin rằng mỗi chàng trai đều có câu chuyện phong cách riêng. 
 						</p>
-
 						<p class="stext-113 cl6 p-b-26">
-							Tại Men's Elegance, mỗi sản phẩm đều được chọn lọc kỹ càng từ các thương hiệu uy tín, với chất liệu cao cấp và kiểu dáng thời thượng. Chúng tôi không chỉ bán quần áo mà còn mang đến giải pháp phong cách toàn diện cho quý ông hiện đại, từ trang phục đến phụ kiện thời trang.
-						</p>
-
-						<p class="stext-113 cl6 p-b-26">
-							Mọi thắc mắc xin liên hệ với chúng tôi tại cửa hàng ở tầng 8, 379 Đường Hudson, New York, NY 10018 hoặc gọi điện theo số (+1) 96 716 6879
+							Được sáng lập từ một cửa hàng nhỏ, Coza Store mang khát vọng đồng hành cùng nam giới Việt trên hành trình khám phá bản thân qua thời trang – nơi ai cũng có thể thử nhiều phong cách để tự tin thể hiện chính mình, với sản phẩm chất lượng và giá cả dễ tiếp cận.
 						</p>
 					</div>
 				</div>
@@ -411,8 +402,7 @@ $wishCount   = count($wishlist);
 						</h3>
 
 						<p class="stext-113 cl6 p-b-26">
-							Chúng tôi tin rằng "Phong cách là cách người đàn ông thể hiện bản thân". Với đội ngũ tư vấn viên chuyên nghiệp và am hiểu thời trang, chúng tôi không chỉ bán sản phẩm mà còn đồng hành cùng quý ông tạo nên phong cách riêng. Mục tiêu của chúng tôi là trở thành thương hiệu thời trang nam cao cấp hàng đầu, nơi mà mỗi quý ông đều có thể tìm thấy phiên bản hoàn hảo nhất của chính mình.
-						</p>
+						Chúng tôi tin rằng việc mang đến sự tự tin bằng những sản phẩm hợp xu hướng, chất lượng tốt và giá cả dễ tiếp cận, đồng thời tạo ra một không gian nơi mọi chàng trai đều được truyền cảm hứng để đổi mới phong cách và sống đúng với cá tính của mình.						</p>
 
 						<div class="bor16 p-l-29 p-b-9 m-t-22">
 							<p class="stext-114 cl6 p-r-40 p-b-11">
@@ -429,7 +419,7 @@ $wishCount   = count($wishlist);
 				<div class="order-md-1 col-11 col-md-5 col-lg-4 m-lr-auto p-b-30">
 					<div class="how-bor2">
 						<div class="hov-img0">
-							<img src="images/about-02.jpg" alt="IMG">
+							<img src="images/banner-02.jpg" alt="IMG">
 						</div>
 					</div>
 				</div>
@@ -439,87 +429,18 @@ $wishCount   = count($wishlist);
 	
 		
 
-	<!-- Footer -->
+		<!-- Footer -->
 	<footer class="bg3 p-t-75 p-b-32">
 		<div class="container">
-			<div class="row">
-					<div class="col-sm-6 col-lg-3 p-b-50">
-					<h4 class="stext-301 cl0 p-b-30">
-						Danh mục
-					</h4>
-
-					<ul>
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Áo sơ mi nam
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Vest & Blazer
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Quần tây nam
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Áo polo
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Phụ kiện nam
-							</a>
-						</li>
-					</ul>
-				</div>				
-				
-				<div class="col-sm-6 col-lg-3 p-b-50">
-					<h4 class="stext-301 cl0 p-b-30">
-						Trợ giúp
-					</h4>
-
-					<ul>
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Theo dõi đơn hàng
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Đổi trả
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Vận chuyển
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								FAQs
-							</a>
-						</li>
-					</ul>
-				</div>
 
 				<div class="col-sm-6 col-lg-3 p-b-50">
 					<h4 class="stext-301 cl0 p-b-30">
-						Liên hệ
+						LIÊN HỆ
 					</h4>
 
 					<p class="stext-107 cl7 size-201">
-						Bạn có câu hỏi? Ghé thăm cửa hàng tại Tầng 8, 379 Đường Hudson, New York, NY 10018 hoặc gọi cho chúng tôi theo số (+1) 96 716 6879
+						Địa chỉ: 70 Tô Ký, TPHCM 
+						<br>Điện thoại: +84 123 456 789
 					</p>
 
 					<div class="p-t-27">
@@ -539,7 +460,7 @@ $wishCount   = count($wishlist);
 
 				<div class="col-sm-6 col-lg-3 p-b-50">
 					<h4 class="stext-301 cl0 p-b-30">
-						Đăng ký nhận tin
+						Nhận bản tin
 					</h4>
 
 					<form>
@@ -560,39 +481,34 @@ $wishCount   = count($wishlist);
 			<div class="p-t-40">
 				<div class="flex-c-m flex-w p-b-18">
 					<a href="#" class="m-all-1">
-						<img src="images/icons/icon-pay-01.png" alt="ICON-PAY">
+						<img src="images/icons/icon-pay-01.png" alt="Biểu tượng thanh toán">
 					</a>
 
 					<a href="#" class="m-all-1">
-						<img src="images/icons/icon-pay-02.png" alt="ICON-PAY">
+						<img src="images/icons/icon-pay-02.png" alt="Biểu tượng thanh toán">
 					</a>
 
 					<a href="#" class="m-all-1">
-						<img src="images/icons/icon-pay-03.png" alt="ICON-PAY">
+						<img src="images/icons/icon-pay-03.png" alt="Biểu tượng thanh toán">
 					</a>
 
 					<a href="#" class="m-all-1">
-						<img src="images/icons/icon-pay-04.png" alt="ICON-PAY">
+						<img src="images/icons/icon-pay-04.png" alt="Biểu tượng thanh toán">
 					</a>
 
 					<a href="#" class="m-all-1">
-						<img src="images/icons/icon-pay-05.png" alt="ICON-PAY">
+						<img src="images/icons/icon-pay-05.png" alt="Biểu tượng thanh toán">
 					</a>
 				</div>
 
 				<p class="stext-107 cl6 txt-center">
 					<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-Copyright &copy;<script>document.write(new Date().getFullYear());</script> 
-All rights reserved | This template is made with 
-<i class="fa fa-heart-o" aria-hidden="true"></i>
- by <a href="https://colorlib.com" target="_blank">Colorlib</a>
-<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-
+					Bản quyền &copy;<script>document.write(new Date().getFullYear());</script> Mọi quyền được bảo lưu | Giao diện được thiết kế bằng <i class="fa fa-heart-o" aria-hidden="true"></i> bởi <a href="https://colorlib.com" target="_blank">Colorlib</a>
+					<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
 				</p>
 			</div>
 		</div>
 	</footer>
-
 
 	<!-- Back to top -->
 	<div class="btn-back-to-top" id="myBtn">

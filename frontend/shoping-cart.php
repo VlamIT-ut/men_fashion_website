@@ -169,9 +169,8 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
                 <div class="menu-desktop">
                     <ul class="main-menu">
                         <li><a href="index.php">Trang chủ</a></li>
-                        <li><a href="product.php">Sản phẩm</a></li>
-                        <li class="label1" data-label1="hot"><a href="shoping-cart.php">Giỏ hàng</a></li>
-                        <li><a href="blog.php">Blog</a></li>
+                        <li class="label1" data-label1="hot"><a href="product.php">Sản phẩm</a></li>
+                        <li><a href="shoping-cart.php">Giỏ hàng</a></li>
                         <li><a href="about.php">Giới thiệu</a></li>
                         <li><a href="contact.php">Liên hệ</a></li>
                     </ul>
@@ -288,9 +287,8 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
 
         <ul class="main-menu-m">
             <li><a href="index.php">Trang chủ</a></li>
-            <li><a href="product.php">Sản phẩm</a></li>
-            <li><a href="shoping-cart.php" class="label1 rs1" data-label1="hot">Giỏ hàng</a></li>
-            <li><a href="blog.php">Blog</a></li>
+            <li class="label1" data-label1="hot"><a href="product.php">Sản phẩm</a></li>
+            <li><a href="shoping-cart.php">Giỏ hàng</a></li>
             <li><a href="about.php">Giới thiệu</a></li>
             <li><a href="contact.php">Liên hệ</a></li>
         </ul>
@@ -364,9 +362,11 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
                                     ?>
                                     <tr class="table_row">
                                         <td class="column-1">
+                                            <?php foreach ($images as $img): ?>
                                             <div class="how-itemcart1">
-                                                <img src="images/<?php echo htmlspecialchars($item['hinh']); ?>" alt="IMG">
+                                                <img src="images/<?php echo htmlspecialchars($img); ?>" alt="IMG-PRODUCT">                                            
                                             </div>
+                                            <?php endforeach; ?>
                                         </td>
                                         <td class="column-2">
                                             <?php echo htmlspecialchars($item['ten_sp']); ?>
@@ -473,153 +473,12 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
                 </div>
             </div>
 
-<!-- ================= FOOTER (giữ như template nhóm) ================= -->
-<footer class="bg3 p-t-75 p-b-32">
-    <div class="container">
-			<div class="row">
-				<div class="col-sm-6 col-lg-3 p-b-50">
-					<h4 class="stext-301 cl0 p-b-30">
-						Danh mục
-					</h4>
-
-					<ul>
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Áo sơ mi nam
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Vest & Blazer
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Quần tây nam
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Áo polo
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Phụ kiện nam
-							</a>
-						</li>
-					</ul>
-				</div>
-
-				<div class="col-sm-6 col-lg-3 p-b-50">
-					<h4 class="stext-301 cl0 p-b-30">
-						Trợ giúp
-					</h4>
-
-					<ul>
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Theo dõi đơn hàng
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Đổi trả
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Vận chuyển
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								FAQs
-							</a>
-						</li>
-					</ul>
-				</div>
-
-				<div class="col-sm-6 col-lg-3 p-b-50">
-					<h4 class="stext-301 cl0 p-b-30">
-						Liên hệ
-					</h4>
-
-					<p class="stext-107 cl7 size-201">
-						Có câu hỏi? Hãy đến cửa hàng của chúng tôi tại Số 1 Võ Văn Ngân, P. Linh Chiểu, TP. Thủ Đức, TP.HCM hoặc gọi (+84) 123 456 789
-					</p>
-
-					<div class="p-t-27">
-						<a href="#" class="fs-18 cl7 hov-cl1 trans-04 m-r-16">
-							<i class="fa fa-facebook"></i>
-						</a>
-						<a href="#" class="fs-18 cl7 hov-cl1 trans-04 m-r-16">
-							<i class="fa fa-instagram"></i>
-						</a>
-						<a href="#" class="fs-18 cl7 hov-cl1 trans-04 m-r-16">
-							<i class="fa fa-pinterest-p"></i>
-						</a>
-					</div>
-				</div>
-
-				<div class="col-sm-6 col-lg-3 p-b-50">
-					<h4 class="stext-301 cl0 p-b-30">
-						Bản tin
-					</h4>
-
-					<form>
-						<div class="wrap-input1 w-full p-b-4">
-							<input class="input1 bg-none plh1 stext-107 cl7" type="text" name="email" placeholder="email@example.com">
-							<div class="focus-input1 trans-04"></div>
-						</div>
-
-						<div class="p-t-18">
-							<button class="flex-c-m stext-101 cl0 size-103 bg1 bor1 hov-btn2 p-lr-15 trans-04">
-								Đăng ký
-							</button>
-						</div>
-					</form>
-				</div>
-			</div>
-
-			<div class="p-t-40">
-				<div class="flex-c-m flex-w p-b-18">
-					<a href="#" class="m-all-1">
-						<img src="images/icons/icon-pay-01.png" alt="ICON-PAY">
-					</a>
-					<a href="#" class="m-all-1">
-						<img src="images/icons/icon-pay-02.png" alt="ICON-PAY">
-					</a>
-					<a href="#" class="m-all-1">
-						<img src="images/icons/icon-pay-03.png" alt="ICON-PAY">
-					</a>
-					<a href="#" class="m-all-1">
-						<img src="images/icons/icon-pay-04.png" alt="ICON-PAY">
-					</a>
-					<a href="#" class="m-all-1">
-						<img src="images/icons/icon-pay-05.png" alt="ICON-PAY">
-					</a>
-				</div>
-
-				<p class="stext-107 cl6 txt-center">
-					Bản quyền &copy;<script>document.write(new Date().getFullYear());</script> Đã đăng ký | Mẫu bởi <a href="https://colorlib.com" target="_blank">Colorlib</a>
-				</p>
-			</div>
-		</div>
-</footer>
-
-<div class="btn-back-to-top" id="myBtn">
-    <span class="symbol-btn-back-to-top">
-        <i class="zmdi zmdi-chevron-up"></i>
-    </span>
-</div>
+	<!-- Back to top -->
+	<div class="btn-back-to-top" id="myBtn">
+		<span class="symbol-btn-back-to-top">
+			<i class="zmdi zmdi-chevron-up"></i>
+		</span>
+	</div>
 
 <!-- JS -->
 <script src="vendor/jquery/jquery-3.2.1.min.js"></script>
