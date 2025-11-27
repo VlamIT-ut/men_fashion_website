@@ -525,10 +525,8 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
                             </span>
                         </div>
                     </div>
+<a href="checkout.php" class="btn btn-primary">Tiến hành đặt hàng</a>
 
-                    <button class="flex-c-m stext-101 cl0 size-116 bg3 bor14 hov-btn3 p-lr-15 trans-04 pointer">
-                        Tiến hành thanh toán
-                    </button>
                 </div>
             </div>
         </div>
