@@ -18,7 +18,7 @@ if (isset($_POST["btnUserLogin"])) {
     } else {
 
         $sql = "SELECT * FROM khach_hang 
-                WHERE email = ? OR sdt = ?
+                WHERE (email = ? OR sdt = ?)
                 AND trang_thai = 1
                 LIMIT 1";
         $stmt = mysqli_prepare($conn, $sql);

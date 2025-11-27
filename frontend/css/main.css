@@ -3347,3 +3347,90 @@ input.num-product::-webkit-inner-spin-button {
   }
 
 }
+
+/* Đặt đoạn này ở gần đầu file, sau phần [Header] cũng được */
+/* MINI PROFILE DROPDOWN */
+.header-user-dropdown {
+    position: relative;
+}
+
+.header-user-dropdown .user-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.header-user-dropdown .user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #555;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.header-user-dropdown .user-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.header-user-dropdown .user-name {
+    font-size: 13px;
+    color: #fff;
+}
+
+.header-user-dropdown .user-role {
+    font-size: 11px;
+    color: #ccc;
+}
+
+.header-user-dropdown .user-chevron {
+    font-size: 16px;
+    color: #ccc;
+}
+
+/* MENU DROPDOWN */
+.header-user-dropdown .user-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 6px;
+    background: #fff;
+    min-width: 190px;
+    border-radius: 10px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+    padding: 6px 0;
+    display: none;
+    z-index: 9999;
+}
+
+.header-user-dropdown.open .user-menu {
+    display: block;
+}
+
+.user-menu-item {
+    display: block;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #333;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.user-menu-item:hover {
+    background: #f5f5f5;
+    color: #000;
+}
+
+.user-menu-item.user-logout {
+    border-top: 1px solid #eee;
+    margin-top: 4px;
+    padding-top: 10px;
+}
+

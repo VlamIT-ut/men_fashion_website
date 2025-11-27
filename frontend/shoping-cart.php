@@ -111,38 +111,46 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
                         Trợ giúp & FAQs
                     </a>
 
-                    <?php if (isset($_SESSION['user'])):
-                        $displayName = getDisplayName($_SESSION['user'], 'Thành viên');
-                        $firstChar   = mb_strtoupper(mb_substr($displayName, 0, 1, 'UTF-8'), 'UTF-8');
-                    ?>
-                        <div class="flex-c-m trans-04 p-lr-25">
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <div style="
-                                    width:32px;height:32px;border-radius:50%;
-                                    background:#555;color:#fff;
-                                    display:flex;align-items:center;justify-content:center;
-                                    font-weight:bold;font-size:14px;">
-                                    <?php echo htmlspecialchars($firstChar); ?>
-                                </div>
-                                <div style="display:flex;flex-direction:column;line-height:1.2;">
-                                    <span style="font-size:13px;">
-                                        <?php echo htmlspecialchars($displayName); ?>
-                                    </span>
-                                    <span style="font-size:11px;color:#ccc;">
-                                        Thành viên
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                   <?php if (isset($_SESSION['user'])): 
+   $displayName = getDisplayName($_SESSION['user'], 'Thành viên');
+   $firstChar   = mb_strtoupper(mb_substr($displayName, 0, 1, 'UTF-8'), 'UTF-8');
+?>
+    <!-- MINI PROFILE DROPDOWN DESKTOP -->
+    <div class="header-user-dropdown flex-c-m p-lr-25">
+        <div class="user-trigger js-user-trigger">
+            <div class="user-avatar">
+                <?php echo htmlspecialchars($firstChar); ?>
+            </div>
+            <div class="user-info">
+                <span class="user-name">
+                    <?php echo htmlspecialchars($displayName); ?>
+                </span>
+                <span class="user-role">
+                    Thành viên
+                </span>
+            </div>
+            <i class="zmdi zmdi-chevron-down user-chevron"></i>
+        </div>
 
-                        <a href="logout.php" class="flex-c-m trans-04 p-lr-25">
-                            Đăng xuất
-                        </a>
-                    <?php else: ?>
-                        <a href="login.php" class="flex-c-m trans-04 p-lr-25">
-                            Đăng nhập
-                        </a>
-                    <?php endif; ?>
+        <div class="user-menu">
+            <a href="profile.php" class="user-menu-item">
+                Hồ sơ của tôi
+            </a>
+            <a href="orders.php" class="user-menu-item">
+                Lịch sử giao dịch
+            </a>
+            <a href="logout.php" class="user-menu-item user-logout">
+                Đăng xuất
+            </a>
+        </div>
+    </div>
+<?php else: ?>
+    <!-- Chưa đăng nhập -->
+    <a href="login.php" class="flex-c-m trans-04 p-lr-25">
+        Đăng nhập
+    </a>
+<?php endif; ?>
+
 
                     <a href="#" class="flex-c-m trans-04 p-lr-25">VI</a>
                     <a href="#" class="flex-c-m trans-04 p-lr-25">VND</a>
@@ -232,29 +240,46 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
             <li>
                 <div class="right-top-bar flex-w h-full">
                     <a href="#" class="flex-c-m p-lr-10 trans-04">Trợ giúp & FAQs</a>
-                    <?php if (isset($_SESSION['user'])):
-                        $displayName = getDisplayName($_SESSION['user'], 'Thành viên');
-                        $firstChar   = mb_strtoupper(mb_substr($displayName, 0, 1, 'UTF-8'), 'UTF-8');
-                    ?>
-                        <div class="flex-c-m trans-04 p-lr-25">
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <div style="
-                                    width:32px;height:32px;border-radius:50%;
-                                    background:#555;color:#fff;
-                                    display:flex;align-items:center;justify-content:center;
-                                    font-weight:bold;font-size:14px;">
-                                    <?php echo htmlspecialchars($firstChar); ?>
-                                </div>
-                                <div style="display:flex;flex-direction:column;line-height:1.2;">
-                                    <span style="font-size:13px;"><?php echo htmlspecialchars($displayName); ?></span>
-                                    <span style="font-size:11px;color:#ccc;">Thành viên</span>
-                                </div>
-                            </div>
-                        </div>
-                        <a href="logout.php" class="flex-c-m trans-04 p-lr-25">Đăng xuất</a>
-                    <?php else: ?>
-                        <a href="login.php" class="flex-c-m trans-04 p-lr-25">Đăng nhập</a>
-                    <?php endif; ?>
+                   <?php if (isset($_SESSION['user'])): 
+   $displayName = getDisplayName($_SESSION['user'], 'Thành viên');
+   $firstChar   = mb_strtoupper(mb_substr($displayName, 0, 1, 'UTF-8'), 'UTF-8');
+?>
+    <!-- MINI PROFILE DROPDOWN DESKTOP -->
+    <div class="header-user-dropdown flex-c-m p-lr-25">
+        <div class="user-trigger js-user-trigger">
+            <div class="user-avatar">
+                <?php echo htmlspecialchars($firstChar); ?>
+            </div>
+            <div class="user-info">
+                <span class="user-name">
+                    <?php echo htmlspecialchars($displayName); ?>
+                </span>
+                <span class="user-role">
+                    Thành viên
+                </span>
+            </div>
+            <i class="zmdi zmdi-chevron-down user-chevron"></i>
+        </div>
+
+        <div class="user-menu">
+            <a href="profile.php" class="user-menu-item">
+                Hồ sơ của tôi
+            </a>
+            <a href="orders.php" class="user-menu-item">
+                Lịch sử giao dịch
+            </a>
+            <a href="logout.php" class="user-menu-item user-logout">
+                Đăng xuất
+            </a>
+        </div>
+    </div>
+<?php else: ?>
+    <!-- Chưa đăng nhập -->
+    <a href="login.php" class="flex-c-m trans-04 p-lr-25">
+        Đăng nhập
+    </a>
+<?php endif; ?>
+
                     <a href="#" class="flex-c-m p-lr-10 trans-04">VI</a>
                     <a href="#" class="flex-c-m p-lr-10 trans-04">VND</a>
                 </div>
@@ -614,6 +639,19 @@ $(function(){
 
 });
 </script>
+<script>
+    // Toggle mini profile
+    $(document).on('click', '.js-user-trigger', function (e) {
+        e.stopPropagation();
+        var $dropdown = $(this).closest('.header-user-dropdown');
+        $('.header-user-dropdown').not($dropdown).removeClass('open');
+        $dropdown.toggleClass('open');
+    });
 
+    // Click ra ngoài thì đóng
+    $(document).on('click', function () {
+        $('.header-user-dropdown').removeClass('open');
+    });
+</script>
 </body>
 </html>
