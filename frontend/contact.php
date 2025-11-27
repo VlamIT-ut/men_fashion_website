@@ -12,7 +12,35 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
     }
     return $default;
 }
+// Biến cờ để biết có gửi form thành công không
+$contactSuccess = false;
+
+// Nếu vừa redirect từ form gửi thành công
+if (!empty($_SESSION['contact_success'])) {
+    $contactSuccess = true;
+    unset($_SESSION['contact_success']);
+}
+
+// Xử lý khi form được submit
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = trim($_POST['email'] ?? '');
+    $msg   = trim($_POST['msg'] ?? '');
+
+    if ($email !== '' && $msg !== '') {
+        // TODO: nếu sau này muốn lưu DB hoặc gửi mail thì làm ở đây
+
+        // Đánh dấu thành công rồi redirect để tránh resubmit
+        $_SESSION['contact_success'] = true;
+
+        // Sau khi gửi xong thì cho form rỗng lại:
+        header('Location: contact.php');
+        exit;
+    }
+}
+
+
 ?>
+
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -65,42 +93,46 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
 							Trợ giúp
 						</a>
 
-						<?php if (isset($_SESSION['user'])): 
-						$displayName = getDisplayName($_SESSION['user'], 'Thành viên');
-						$firstChar   = mb_strtoupper(mb_substr($displayName, 0, 1, 'UTF-8'), 'UTF-8');
-					?>
-						<!-- Đã đăng nhập: hiện avatar + tên + Đăng xuất -->
-						<div class="flex-c-m trans-04 p-lr-25">
-							<div style="display:flex;align-items:center;gap:8px;">
-								<div style="
-									width:32px;height:32px;border-radius:50%;
-									background:#555;color:#fff;
-									display:flex;align-items:center;justify-content:center;
-									font-weight:bold;font-size:14px;
-								">
-									<?php echo htmlspecialchars($firstChar); ?>
-								</div>
-								<div style="display:flex;flex-direction:column;line-height:1.2;">
-									<span style="font-size:13px;">
-										<?php echo htmlspecialchars($displayName); ?>
-									</span>
-									<span style="font-size:11px;color:#ccc;">
-										Thành viên
-									</span>
-								</div>
-							</div>
-						</div>
+					<?php if (isset($_SESSION['user'])): 
+   $displayName = getDisplayName($_SESSION['user'], 'Thành viên');
+   $firstChar   = mb_strtoupper(mb_substr($displayName, 0, 1, 'UTF-8'), 'UTF-8');
+?>
+    <!-- MINI PROFILE DROPDOWN DESKTOP -->
+    <div class="header-user-dropdown flex-c-m p-lr-25">
+        <div class="user-trigger js-user-trigger">
+            <div class="user-avatar">
+                <?php echo htmlspecialchars($firstChar); ?>
+            </div>
+            <div class="user-info">
+                <span class="user-name">
+                    <?php echo htmlspecialchars($displayName); ?>
+                </span>
+                <span class="user-role">
+                    Thành viên
+                </span>
+            </div>
+            <i class="zmdi zmdi-chevron-down user-chevron"></i>
+        </div>
 
-						<a href="logout.php" class="flex-c-m trans-04 p-lr-25">
-							Đăng xuất
-						</a>
+        <div class="user-menu">
+            <a href="profile.php" class="user-menu-item">
+                Hồ sơ của tôi
+            </a>
+            <a href="orders.php" class="user-menu-item">
+                Lịch sử giao dịch
+            </a>
+            <a href="logout.php" class="user-menu-item user-logout">
+                Đăng xuất
+            </a>
+        </div>
+    </div>
+<?php else: ?>
+    <!-- Chưa đăng nhập -->
+    <a href="login.php" class="flex-c-m trans-04 p-lr-25">
+        Đăng nhập
+    </a>
+<?php endif; ?>
 
-					<?php else: ?>
-						<!-- Chưa đăng nhập -->
-						<a href="login.php" class="flex-c-m trans-04 p-lr-25">
-							Đăng nhập
-						</a>
-					<?php endif; ?>
 
 						<a href="#" class="flex-c-m trans-04 p-lr-25">
 							VI
@@ -168,8 +200,6 @@ foreach ($cart as $it) {
     <i class="zmdi zmdi-shopping-cart"></i>
 </div>
 
-							<i class="zmdi zmdi-shopping-cart"></i>
-						</div>
 <?php
 $wishlist    = $_SESSION['wishlist'] ?? [];
 $wishCount   = count($wishlist);
@@ -210,8 +240,6 @@ foreach ($cart as $it) {
     <i class="zmdi zmdi-shopping-cart"></i>
 </div>
 
-					<i class="zmdi zmdi-shopping-cart"></i>
-				</div>
 
 				<?php
 $wishlist    = $_SESSION['wishlist'] ?? [];
@@ -250,41 +278,45 @@ $wishCount   = count($wishlist);
 						</a>
 
 						<?php if (isset($_SESSION['user'])): 
-						$displayName = getDisplayName($_SESSION['user'], 'Thành viên');
-						$firstChar   = mb_strtoupper(mb_substr($displayName, 0, 1, 'UTF-8'), 'UTF-8');
-					?>
-						<!-- Đã đăng nhập: hiện avatar + tên + Đăng xuất -->
-						<div class="flex-c-m trans-04 p-lr-25">
-							<div style="display:flex;align-items:center;gap:8px;">
-								<div style="
-									width:32px;height:32px;border-radius:50%;
-									background:#555;color:#fff;
-									display:flex;align-items:center;justify-content:center;
-									font-weight:bold;font-size:14px;
-								">
-									<?php echo htmlspecialchars($firstChar); ?>
-								</div>
-								<div style="display:flex;flex-direction:column;line-height:1.2;">
-									<span style="font-size:13px;">
-										<?php echo htmlspecialchars($displayName); ?>
-									</span>
-									<span style="font-size:11px;color:#ccc;">
-										Thành viên
-									</span>
-								</div>
-							</div>
-						</div>
+   $displayName = getDisplayName($_SESSION['user'], 'Thành viên');
+   $firstChar   = mb_strtoupper(mb_substr($displayName, 0, 1, 'UTF-8'), 'UTF-8');
+?>
+    <!-- MINI PROFILE DROPDOWN DESKTOP -->
+    <div class="header-user-dropdown flex-c-m p-lr-25">
+        <div class="user-trigger js-user-trigger">
+            <div class="user-avatar">
+                <?php echo htmlspecialchars($firstChar); ?>
+            </div>
+            <div class="user-info">
+                <span class="user-name">
+                    <?php echo htmlspecialchars($displayName); ?>
+                </span>
+                <span class="user-role">
+                    Thành viên
+                </span>
+            </div>
+            <i class="zmdi zmdi-chevron-down user-chevron"></i>
+        </div>
 
-						<a href="logout.php" class="flex-c-m trans-04 p-lr-25">
-							Đăng xuất
-						</a>
+        <div class="user-menu">
+            <a href="profile.php" class="user-menu-item">
+                Hồ sơ của tôi
+            </a>
+            <a href="orders.php" class="user-menu-item">
+                Lịch sử giao dịch
+            </a>
+            <a href="logout.php" class="user-menu-item user-logout">
+                Đăng xuất
+            </a>
+        </div>
+    </div>
+<?php else: ?>
+    <!-- Chưa đăng nhập -->
+    <a href="login.php" class="flex-c-m trans-04 p-lr-25">
+        Đăng nhập
+    </a>
+<?php endif; ?>
 
-					<?php else: ?>
-						<!-- Chưa đăng nhập -->
-						<a href="login.php" class="flex-c-m trans-04 p-lr-25">
-							Đăng nhập
-						</a>
-					<?php endif; ?>
 
 						<a href="#" class="flex-c-m p-lr-10 trans-04">
 							VI
@@ -339,12 +371,19 @@ $wishCount   = count($wishlist);
 					<img src="images/icons/icon-close2.png" alt="CLOSE">
 				</button>
 
-				<form class="wrap-search-header flex-w p-l-15">
-					<button class="flex-c-m trans-04">
-						<i class="zmdi zmdi-search"></i>
-					</button>
-					<input class="plh3" type="text" name="search" placeholder="Tìm kiếm...">
-				</form>
+				<form class="wrap-search-header flex-w p-l-15"
+      method="get"
+      action="product.php">
+    <button class="flex-c-m trans-04">
+        <i class="zmdi zmdi-search"></i>
+    </button>
+    <input class="plh3"
+           type="text"
+           name="q"
+           placeholder="Tìm kiếm sản phẩm..."
+           value="<?php echo isset($_GET['q']) ? htmlspecialchars($_GET['q']) : ''; ?>">
+</form>
+
 			</div>
 		</div>
 	</header>
@@ -354,6 +393,7 @@ $wishCount   = count($wishlist);
 <div id="mini-wishlist-container">
     <?php include 'mini_wishlist.php'; ?>
 </div>
+<?php include 'search_modal.php'; ?>
 
 
 	<!-- Title page -->
@@ -374,14 +414,18 @@ $wishCount   = count($wishlist);
 							Gửi tin nhắn cho chúng tôi
 						</h4>
 
-						<div class="bor8 m-b-20 how-pos4-parent">
-							<input class="stext-111 cl2 plh3 size-116 p-l-62 p-r-30" type="text" name="email" placeholder="Địa chỉ email của bạn">
-							<img class="how-pos4 pointer-none" src="images/icons/icon-email.png" alt="ICON">
-						</div>
+						<input class="stext-111 cl2 plh3 size-116 p-l-62 p-r-30"
+       type="text"
+       name="email"
+       placeholder="Địa chỉ email của bạn"
+       value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>">
 
-						<div class="bor8 m-b-30">
-							<textarea class="stext-111 cl2 plh3 size-120 p-lr-28 p-tb-25" name="msg" placeholder="Chúng tôi có thể giúp gì cho bạn?"></textarea>
-						</div>
+<textarea class="stext-111 cl2 plh3 size-120 p-lr-28 p-tb-25"
+          name="msg"
+          placeholder="Chúng tôi có thể giúp gì cho bạn?"><?php
+    echo isset($msg) ? htmlspecialchars($msg) : '';
+?></textarea>
+
 
 						<button class="flex-c-m stext-101 cl0 size-121 bg3 bor1 hov-btn3 p-lr-15 trans-04 pointer">
 							Gửi
@@ -640,7 +684,26 @@ $wishCount   = count($wishlist);
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAKFWBqlKAGCeS1rMVoaNlwyayu0e0YRes"></script>
 	<script src="js/map-custom.js"></script>
 <!--===============================================================================================-->
-	<script src="js/main.js"></script>
+<?php if (!empty($contactSuccess)): ?>
+<script>
+    alert('Cảm ơn bạn đã góp ý! Chúng tôi đã nhận được phản hồi của bạn.');
+</script>
+<?php endif; ?>
+	
+<script src="js/main.js"></script>
+<script>
+    // Toggle mini profile
+    $(document).on('click', '.js-user-trigger', function (e) {
+        e.stopPropagation();
+        var $dropdown = $(this).closest('.header-user-dropdown');
+        $('.header-user-dropdown').not($dropdown).removeClass('open');
+        $dropdown.toggleClass('open');
+    });
 
+    // Click ra ngoài thì đóng
+    $(document).on('click', function () {
+        $('.header-user-dropdown').removeClass('open');
+    });
+</script>
 </body>
 </html>

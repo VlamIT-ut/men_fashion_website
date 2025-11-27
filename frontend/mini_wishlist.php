@@ -1,5 +1,10 @@
 <?php
 // mini_wishlist.php
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 $wishlist = $_SESSION['wishlist'] ?? [];
 $count    = count($wishlist);
 ?>
@@ -20,16 +25,18 @@ $count    = count($wishlist);
 
         <div class="header-cart-content flex-w js-pscroll">
             <?php if ($count == 0): ?>
-                <p class="stext-110 p-t-20">Chưa có sản phẩm nào trong danh sách yêu thích.</p>
+                <p class="stext-110 p-t-20">
+                    Chưa có sản phẩm nào trong danh sách yêu thích.
+                </p>
             <?php else: ?>
                 <ul class="header-cart-wrapitem w-full">
                     <?php foreach ($wishlist as $item): ?>
-                        <li class="header-cart-item flex-w flex-t m-b-12">
+                        <li class="header-cart-item flex-w flex-t m-b-12" style="align-items:center;">
                             <div class="header-cart-item-img">
                                 <img src="images/<?php echo htmlspecialchars($item['ten_anh']); ?>" alt="IMG">
                             </div>
 
-                            <div class="header-cart-item-txt p-t-8">
+                            <div class="header-cart-item-txt p-t-8" style="flex:1;">
                                 <a href="product-detail.php?id=<?php echo (int)$item['id']; ?>"
                                    class="header-cart-item-name m-b-5 hov-cl1 trans-04">
                                     <?php echo htmlspecialchars($item['ten_sp']); ?>
@@ -39,6 +46,14 @@ $count    = count($wishlist);
                                     <?php echo number_format($item['gia']); ?>₫
                                 </span>
                             </div>
+
+                            <!-- Nút bỏ thích ngay trong mini favourite -->
+                            <button class="js-remove-wish"
+                                    style="border:none;background:none;color:#888;cursor:pointer;font-size:18px;margin-left:8px;"
+                                    title="Bỏ khỏi yêu thích"
+                                    data-id="<?php echo (int)$item['id']; ?>">
+                                <i class="zmdi zmdi-close"></i>
+                            </button>
                         </li>
                     <?php endforeach; ?>
                 </ul>
