@@ -16,64 +16,41 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
     return $default;
 }
 
-/* ================== XỬ LÝ AJAX QUICK VIEW ================== */
+// ================== PHẦN 1: XỬ LÝ AJAX QUICK VIEW (QUAN TRỌNG) ==================
+// Nếu có request AJAX gửi lên, code sẽ chạy vào đây, trả về HTML rồi DỪNG LUÔN (exit)
 if (isset($_POST['lay_thong_tin_sp_ajax']) && isset($_POST['ma_sp'])) {
+    
+    // Kiểm tra kết nối DB
+    if (!isset($conn)) { echo "Lỗi kết nối CSDL"; exit; }
+
     $ma_sp = (int)$_POST['ma_sp'];
 
-    // 1. Lấy sản phẩm + 1 ảnh
-    $sql = "
-        SELECT sp.ma_sp, sp.ten_sp, sp.gia, sp.mota,
-               MIN(img.ten_anh) AS ten_anh
-        FROM san_pham sp
-        LEFT JOIN hinhanh_sp img ON sp.ma_sp = img.ma_sp
-        WHERE sp.ma_sp = $ma_sp
-        GROUP BY sp.ma_sp, sp.ten_sp, sp.gia, sp.mota
-        LIMIT 1
-    ";
+    // 1. Lấy thông tin sản phẩm
+    $sql = "SELECT sp.*, MIN(img.ten_anh) as ten_anh 
+            FROM san_pham sp 
+            LEFT JOIN hinhanh_sp img ON sp.ma_sp = img.ma_sp 
+            WHERE sp.ma_sp = $ma_sp 
+            GROUP BY sp.ma_sp";
+            
     $rs = mysqli_query($conn, $sql);
-    $p  = $rs ? mysqli_fetch_assoc($rs) : null;
-
-    if ($p) {
-        // 2. Kích cỡ
-        $sizes = [];
-        $sql_size = "
-            SELECT kc.ten_kichco
-            FROM kich_co kc
-            JOIN kichco_sp ks ON kc.ma_kichco = ks.ma_kichco
-            WHERE ks.ma_sp = $ma_sp
-        ";
-        $rs_size = mysqli_query($conn, $sql_size);
-        if ($rs_size) {
-            while ($row = mysqli_fetch_assoc($rs_size)) {
-                $sizes[] = $row['ten_kichco'];
-            }
-        }
-
-        // 3. Màu sắc
-        $colors = [];
-        $sql_color = "
-            SELECT ms.ten_mau
-            FROM mau_sac ms
-            JOIN mau_sp msp ON ms.ma_mau = msp.ma_mau
-            WHERE msp.ma_sp = $ma_sp
-        ";
-        $rs_color = mysqli_query($conn, $sql_color);
-        if ($rs_color) {
-            while ($row = mysqli_fetch_assoc($rs_color)) {
-                $colors[] = $row['ten_mau'];
-            }
-        }
-
-        // 4. Tất cả ảnh (nếu cần slide)
+    
+    if ($rs && mysqli_num_rows($rs) > 0) {
+        $p = mysqli_fetch_assoc($rs);
+        
+        // 2. Lấy hình ảnh gallery
+        $sqlImg = "SELECT ten_anh FROM hinhanh_sp WHERE ma_sp = $ma_sp";
+        $rsImg = mysqli_query($conn, $sqlImg);
         $images = [];
-        $sqlImg  = "SELECT ten_anh FROM hinhanh_sp WHERE ma_sp = $ma_sp";
-        $rsImg   = mysqli_query($conn, $sqlImg);
-        while ($rowImg = mysqli_fetch_assoc($rsImg)) {
-            $images[] = $rowImg['ten_anh'];
-        }
-        if (empty($images)) {
-            $images[] = 'product-01.jpg';
-        }
+        while($row = mysqli_fetch_assoc($rsImg)) { $images[] = $row['ten_anh']; }
+        if(empty($images)) $images[] = $p['ten_anh'] ?? 'product-01.jpg'; // Fallback ảnh
+
+        // 3. Lấy Size & Màu (Demo query, bạn chỉnh theo DB của bạn)
+        $sizes = []; 
+        $colors = [];
+        // Query lấy size...
+        // Query lấy color...
+        
+        // --- BẮT ĐẦU IN HTML RA CHO MODAL ---
         ?>
         <div class="row">
             <div class="col-md-6 col-lg-7 p-b-30">
@@ -81,21 +58,18 @@ if (isset($_POST['lay_thong_tin_sp_ajax']) && isset($_POST['ma_sp'])) {
                     <div class="wrap-slick3 flex-sb flex-w">
                         <div class="wrap-slick3-dots"></div>
                         <div class="wrap-slick3-arrows flex-sb-m flex-w"></div>
-
                         <div class="slick3 gallery-lb">
                             <?php foreach ($images as $img): ?>
-                                <div class="item-slick3" data-thumb="images/products/<?php echo htmlspecialchars($img); ?>">
-                                    <div class="wrap-pic-w pos-relative">
-                                        <img src="images/products/<?php echo htmlspecialchars($img); ?>" alt="IMG-PRODUCT">
-                                        <a class="flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04"
-                                           href="images/products/<?php echo htmlspecialchars($img); ?>">
-                                            <i class="fa fa-expand"></i>
-                                        </a>
-                                    </div>
+                            <div class="item-slick3" data-thumb="images/<?php echo htmlspecialchars($img); ?>">
+                                <div class="wrap-pic-w pos-relative">
+                                    <img src="images/<?php echo htmlspecialchars($img); ?>" alt="IMG-PRODUCT">
+                                    <a class="flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04" href="images/<?php echo htmlspecialchars($img); ?>">
+                                        <i class="fa fa-expand"></i>
+                                    </a>
                                 </div>
+                            </div>
                             <?php endforeach; ?>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -105,117 +79,46 @@ if (isset($_POST['lay_thong_tin_sp_ajax']) && isset($_POST['ma_sp'])) {
                     <h4 class="mtext-105 cl2 js-name-detail p-b-14">
                         <?php echo htmlspecialchars($p['ten_sp']); ?>
                     </h4>
-
                     <span class="mtext-106 cl2">
-                        <?php 
-                            if ($p['gia'] !== null) {
-                                echo number_format($p['gia']) . "₫";
-                            } else {
-                                echo "Liên hệ";
-                            }
-                        ?>
+                        <?php echo number_format($p['gia'], 0, ',', '.'); ?>₫
                     </span>
-
                     <p class="stext-102 cl3 p-t-23">
-                        <?php 
-                            echo !empty($p['mota']) 
-                                ? nl2br(htmlspecialchars($p['mota'])) 
-                                : "Sản phẩm chưa có mô tả.";
-                        ?>
+                        <?php echo nl2br(htmlspecialchars($p['mota'] ?? '')); ?>
                     </p>
                     
                     <div class="p-t-33">
-                        <!-- Kích cỡ -->
-                        <div class="flex-w flex-r-m p-b-10">
-                            <div class="size-203 flex-c-m respon6">
-                                Kích cỡ
-                            </div>
-                            <div class="size-204 respon6-next">
-                                <div class="rs1-select2 bor8 bg0">
-                                    <select class="js-select2-modal" name="size">
-                                        <option value="">Chọn kích cỡ</option>
-                                        <?php if (!empty($sizes)): ?>
-                                            <?php foreach ($sizes as $kc): ?>
-                                                <option><?php echo htmlspecialchars($kc); ?></option>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
-                                            <option disabled>Đang cập nhật</option>
-                                        <?php endif; ?>
-                                    </select>
-                                    <div class="dropDownSelect2"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Màu sắc -->
-                        <div class="flex-w flex-r-m p-b-10">
-                            <div class="size-203 flex-c-m respon6">
-                                Màu sắc
-                            </div>
-                            <div class="size-204 respon6-next">
-                                <div class="rs1-select2 bor8 bg0">
-                                    <select class="js-select2-modal" name="color">
-                                        <option value="">Chọn màu sắc</option>
-                                        <?php if (!empty($colors)): ?>
-                                            <?php foreach ($colors as $mau): ?>
-                                                <option><?php echo htmlspecialchars($mau); ?></option>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
-                                            <option disabled>Đang cập nhật</option>
-                                        <?php endif; ?>
-                                    </select>
-                                    <div class="dropDownSelect2"></div>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="flex-w flex-r-m p-b-10">
                             <div class="size-204 flex-w flex-m respon6-next">
                                 <div class="wrap-num-product flex-w m-r-20 m-tb-10">
-                                    <div class="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m">
-                                        <i class="fs-16 zmdi zmdi-minus"></i>
-                                    </div>
-
+                                    <div class="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m"><i class="fs-16 zmdi zmdi-minus"></i></div>
                                     <input class="mtext-104 cl3 txt-center num-product" type="number" name="num-product" value="1">
-
-                                    <div class="btn-num-product-up cl8 hov-btn3 trans-04 flex-c-m">
-                                        <i class="fs-16 zmdi zmdi-plus"></i>
-                                    </div>
+                                    <div class="btn-num-product-up cl8 hov-btn3 trans-04 flex-c-m"><i class="fs-16 zmdi zmdi-plus"></i></div>
                                 </div>
-
-                                <button 
-                                    class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail"
-                                    data-id="<?php echo (int)$p['ma_sp']; ?>"
-                                >
+                                <button class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail" data-id="<?php echo $p['ma_sp']; ?>">
                                     Thêm vào giỏ
                                 </button>
                             </div>
                         </div>
                     </div>
-
+                    
                     <div class="flex-w flex-m p-l-100 p-t-40 respon7">
                         <div class="flex-m bor9 p-r-10 m-r-11">
-                            <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100" data-tooltip="Thêm vào yêu thích">
+                            <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100" data-tooltip="Add to Wishlist">
                                 <i class="zmdi zmdi-favorite"></i>
                             </a>
                         </div>
-
-                        <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Facebook">
-                            <i class="fa fa-facebook"></i>
-                        </a>
-                        <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Twitter">
-                            <i class="fa fa-twitter"></i>
-                        </a>
-                        <a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 m-r-8 tooltip100" data-tooltip="Google Plus">
-                            <i class="fa fa-google-plus"></i>
-                        </a>
                     </div>
                 </div>
             </div>
         </div>
         <?php
+        // --- KẾT THÚC HTML MODAL ---
+    } else {
+        echo "<p class='text-center p-t-50'>Không tìm thấy sản phẩm (ID: $ma_sp)</p>";
     }
-    exit;
+    
+    // QUAN TRỌNG: Ngắt code tại đây để không in ra footer/header của trang product
+    exit; 
 }
 ?>
 <!DOCTYPE html>
@@ -650,7 +553,7 @@ if (count($whereParts) > 0) {
 
 // Pagination
 $page    = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-$perPage = 8; // số sản phẩm / trang
+$perPage = 9; // số sản phẩm / trang
 $offset  = ($page - 1) * $perPage;
 
 // Query sản phẩm (DISTINCT vì có thể join nhiều màu)
@@ -891,29 +794,24 @@ $wishlist = $_SESSION['wishlist'] ?? [];
 					<?php endwhile; ?>
 				<?php endif; ?>
 			</div>
-
-			<!-- PHÂN TRANG -->
 			<div class="flex-c-m flex-w w-full p-t-45">
-				<?php
-				if ($totalPages > 1) {
-					echo '<p>Trang: ';
-					for ($i = 1; $i <= $totalPages; $i++) {
-						if ($page == $i) {
-							echo "<span class='pnow' style='margin:0 4px;font-weight:bold;'>$i</span>";
-						} else {
-							$paramsPage = $_GET;
-							$paramsPage['page'] = $i;
-							$urlPage = '?' . http_build_query($paramsPage);
-							echo "<a href='$urlPage' style='margin:0 4px;'>$i</a>";
-						}
-					}
-					echo '</p>';
-				}
-				?>
-			</div>
+				<?php if ($totalPages > 1): ?>
+					<?php for ($i = 1; $i <= $totalPages; $i++): 
+						$params = $_GET;
+						$params['page'] = $i;
+						$urlPage = '?' . http_build_query($params);
+						$active = ($page == $i) ? 'text-white bg-dark' : '';
+					?>
+						<a href="<?= $urlPage ?>"
+						class="flex-c-m how-pagination1 trans-04 m-all-7 <?= $active ?>">
+						<?= $i ?>
+						</a>
+					<?php endfor; ?>
+				</div>
+				<?php endif; ?>
 
-		</div>
-	</div>
+			</div>
+			</section>
 
 	<!-- Footer -->
 	<footer class="bg3 p-t-75 p-b-32">

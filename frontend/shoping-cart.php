@@ -434,8 +434,11 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
 
                     <div class="flex-w flex-t bor12 p-b-13">
                         <div class="size-208">
-                            <span class="stext-110 cl2">Tạm tính:</span>
+                            <span class="stext-110 cl2">
+                                Tạm tính:
+                            </span>
                         </div>
+
                         <div class="size-209">
                             <span class="mtext-110 cl2">
                                 <?php echo number_format($subtotal, 0, ',', '.'); ?>₫
@@ -443,106 +446,173 @@ function getDisplayName($sessionValue, $default = 'Tài khoản') {
                         </div>
                     </div>
 
-                    <div class="flex-w flex-t bor12 p-t-15 p-b-30">
-                        <div class="size-208 w-full-ssm">
-                            <span class="stext-110 cl2">Vận chuyển:</span>
-                        </div>
-
-                        <div class="size-209 p-r-18 p-r-0-sm w-full-ssm">
-                            <p class="stext-111 cl6 p-t-2">
-                                Vui lòng nhập địa chỉ giao hàng để tính phí vận chuyển.
-                            </p>
-
-                            <div class="p-t-15">
-                                <span class="stext-112 cl8">Tính phí vận chuyển</span>
-
-                                <div class="rs1-select2 rs2-select2 bor8 bg0 m-b-12 m-t-9">
-                                   <select class="js-select2" name="province">
-    <option value="">Chọn tỉnh/thành...</option>
-<option value="Hà Nội">Hà Nội</option>
-<option value="Huế">Huế</option>
-<option value="Lai Châu">Lai Châu</option>
-<option value="Điện Biên">Điện Biên</option>
-<option value="Sơn La">Sơn La</option>
-<option value="Lạng Sơn">Lạng Sơn</option>
-<option value="Quảng Ninh">Quảng Ninh</option>
-<option value="Thanh Hóa">Thanh Hóa</option>
-<option value="Nghệ An">Nghệ An</option>
-<option value="Hà Tĩnh">Hà Tĩnh</option>
-<option value="Cao Bằng">Cao Bằng</option>
-<option value="Tuyên Quang">Tuyên Quang</option>
-<option value="Lào Cai">Lào Cai</option>
-<option value="Thái Nguyên">Thái Nguyên</option>
-<option value="Phú Thọ">Phú Thọ</option>
-<option value="Bắc Ninh">Bắc Ninh</option>
-<option value="Hưng Yên">Hưng Yên</option>
-<option value="TP Hải Phòng">TP Hải Phòng</option>
-<option value="Ninh Bình">Ninh Bình</option>
-<option value="Quảng Trị">Quảng Trị</option>
-<option value="TP Đà Nẵng">TP Đà Nẵng</option>
-<option value="Quảng Ngãi">Quảng Ngãi</option>
-<option value="Gia Lai">Gia Lai</option>
-<option value="Khánh Hòa">Khánh Hòa</option>
-<option value="Lâm Đồng">Lâm Đồng</option>
-<option value="Đắk Lắk">Đắk Lắk</option>
-<option value="TP Hồ Chí Minh">TP Hồ Chí Minh</option>
-<option value="Đồng Nai">Đồng Nai</option>
-<option value="Tây Ninh">Tây Ninh</option>
-<option value="TP Cần Thơ">TP Cần Thơ</option>
-<option value="Vĩnh Long">Vĩnh Long</option>
-<option value="Đồng Tháp">Đồng Tháp</option>
-<option value="An Giang">An Giang</option>
-<option value="Cà Mau">Cà Mau</option>
-
-</select>
-                                    <div class="dropDownSelect2"></div>
-                                </div>
-
-                                <div class="bor8 bg0 m-b-12">
-                                    <input class="stext-111 cl8 plh3 size-111 p-lr-15" type="text" name="state" placeholder="Quận/Huyện">
-                                </div>
-
-                                <div class="bor8 bg0 m-b-22">
-                                    <input class="stext-111 cl8 plh3 size-111 p-lr-15" type="text" name="postcode" placeholder="Mã bưu điện">
-                                </div>
-
-                                <div class="flex-w">
-                                    <div class="flex-c-m stext-101 cl2 size-115 bg8 bor13 hov-btn3 p-lr-15 trans-04 pointer">
-                                        Cập nhật
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="flex-w flex-t p-t-27 p-b-33">
                         <div class="size-208">
-                            <span class="mtext-101 cl2">Tổng cộng:</span>
+                            <span class="mtext-101 cl2">
+                                Tổng cộng:
+                            </span>
                         </div>
+
                         <div class="size-209 p-t-1">
                             <span class="mtext-110 cl2">
                                 <?php echo number_format($subtotal, 0, ',', '.'); ?>₫
                             </span>
                         </div>
+                        
+                        <div class="size-208"></div>
+                        <div class="size-209 p-t-10">
+                            <span class="stext-111 cl6" style="font-size: 13px;">
+                                (Phí vận chuyển sẽ được tính ở bước tiếp theo)
+                            </span>
+                        </div>
                     </div>
 
-                    <button class="flex-c-m stext-101 cl0 size-116 bg3 bor14 hov-btn3 p-lr-15 trans-04 pointer">
+                    <a href="checkout.php" class="flex-c-m stext-101 cl0 size-116 bg3 bor14 hov-btn3 p-lr-15 trans-04 pointer text-white" style="text-decoration: none;">
                         Tiến hành thanh toán
-                    </button>
+                    </a>
                 </div>
             </div>
-        </div>
-    </div>
-</form>
 
 <!-- ================= FOOTER (giữ như template nhóm) ================= -->
 <footer class="bg3 p-t-75 p-b-32">
     <div class="container">
-        <div class="row">
-            <!-- giữ nguyên 4 cột footer như bạn đang có -->
-            ...
-        </div>
-    </div>
+			<div class="row">
+				<div class="col-sm-6 col-lg-3 p-b-50">
+					<h4 class="stext-301 cl0 p-b-30">
+						Danh mục
+					</h4>
+
+					<ul>
+						<li class="p-b-10">
+							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
+								Áo sơ mi nam
+							</a>
+						</li>
+
+						<li class="p-b-10">
+							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
+								Vest & Blazer
+							</a>
+						</li>
+
+						<li class="p-b-10">
+							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
+								Quần tây nam
+							</a>
+						</li>
+
+						<li class="p-b-10">
+							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
+								Áo polo
+							</a>
+						</li>
+
+						<li class="p-b-10">
+							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
+								Phụ kiện nam
+							</a>
+						</li>
+					</ul>
+				</div>
+
+				<div class="col-sm-6 col-lg-3 p-b-50">
+					<h4 class="stext-301 cl0 p-b-30">
+						Trợ giúp
+					</h4>
+
+					<ul>
+						<li class="p-b-10">
+							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
+								Theo dõi đơn hàng
+							</a>
+						</li>
+
+						<li class="p-b-10">
+							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
+								Đổi trả
+							</a>
+						</li>
+
+						<li class="p-b-10">
+							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
+								Vận chuyển
+							</a>
+						</li>
+
+						<li class="p-b-10">
+							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
+								FAQs
+							</a>
+						</li>
+					</ul>
+				</div>
+
+				<div class="col-sm-6 col-lg-3 p-b-50">
+					<h4 class="stext-301 cl0 p-b-30">
+						Liên hệ
+					</h4>
+
+					<p class="stext-107 cl7 size-201">
+						Có câu hỏi? Hãy đến cửa hàng của chúng tôi tại Số 1 Võ Văn Ngân, P. Linh Chiểu, TP. Thủ Đức, TP.HCM hoặc gọi (+84) 123 456 789
+					</p>
+
+					<div class="p-t-27">
+						<a href="#" class="fs-18 cl7 hov-cl1 trans-04 m-r-16">
+							<i class="fa fa-facebook"></i>
+						</a>
+						<a href="#" class="fs-18 cl7 hov-cl1 trans-04 m-r-16">
+							<i class="fa fa-instagram"></i>
+						</a>
+						<a href="#" class="fs-18 cl7 hov-cl1 trans-04 m-r-16">
+							<i class="fa fa-pinterest-p"></i>
+						</a>
+					</div>
+				</div>
+
+				<div class="col-sm-6 col-lg-3 p-b-50">
+					<h4 class="stext-301 cl0 p-b-30">
+						Bản tin
+					</h4>
+
+					<form>
+						<div class="wrap-input1 w-full p-b-4">
+							<input class="input1 bg-none plh1 stext-107 cl7" type="text" name="email" placeholder="email@example.com">
+							<div class="focus-input1 trans-04"></div>
+						</div>
+
+						<div class="p-t-18">
+							<button class="flex-c-m stext-101 cl0 size-103 bg1 bor1 hov-btn2 p-lr-15 trans-04">
+								Đăng ký
+							</button>
+						</div>
+					</form>
+				</div>
+			</div>
+
+			<div class="p-t-40">
+				<div class="flex-c-m flex-w p-b-18">
+					<a href="#" class="m-all-1">
+						<img src="images/icons/icon-pay-01.png" alt="ICON-PAY">
+					</a>
+					<a href="#" class="m-all-1">
+						<img src="images/icons/icon-pay-02.png" alt="ICON-PAY">
+					</a>
+					<a href="#" class="m-all-1">
+						<img src="images/icons/icon-pay-03.png" alt="ICON-PAY">
+					</a>
+					<a href="#" class="m-all-1">
+						<img src="images/icons/icon-pay-04.png" alt="ICON-PAY">
+					</a>
+					<a href="#" class="m-all-1">
+						<img src="images/icons/icon-pay-05.png" alt="ICON-PAY">
+					</a>
+				</div>
+
+				<p class="stext-107 cl6 txt-center">
+					Bản quyền &copy;<script>document.write(new Date().getFullYear());</script> Đã đăng ký | Mẫu bởi <a href="https://colorlib.com" target="_blank">Colorlib</a>
+				</p>
+			</div>
+		</div>
 </footer>
 
 <div class="btn-back-to-top" id="myBtn">
