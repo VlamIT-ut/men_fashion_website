@@ -1,6 +1,6 @@
 <?php
 require_once("./config.php");
-
+include "../db.php";   // chỉnh đường dẫn cho đúng
 $vnp_SecureHash = $_GET['vnp_SecureHash'];
 $inputData = array();
 foreach ($_GET as $key => $value) {
@@ -53,6 +53,17 @@ if ($secureHash == $vnp_SecureHash) {
     $cssClass = "warning";
 }
 
+ // Cập nhật trạng thái thanh toán trong đơn hàng
+        $orderId = (int)$_GET['vnp_TxnRef']; // chính là ma_dh đã gửi sang
+
+        $sql = "UPDATE don_hang
+                SET trangthai_thanhtoan = 1,
+                    ma_pt = 2      -- 2 = VNPAY (nếu bạn dùng mã này)
+                WHERE ma_dh = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "i", $orderId);
+        mysqli_stmt_execute($stmt); 
+        
 // Format lại tiền tệ và ngày tháng cho đẹp
 $amount = number_format($_GET['vnp_Amount'] / 100) . " VNĐ";
 $dateRaw = $_GET['vnp_PayDate'];
