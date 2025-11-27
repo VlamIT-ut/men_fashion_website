@@ -99,7 +99,7 @@
             }
 
             $('.sub-menu-m').each(function(){
-                if($(this).css('display') == 'block') { console.log('hello');
+                if($(this).css('display') == 'block') {
                     $(this).css('display','none');
                     $(arrowMainMenu).removeClass('turn-arrow-main-menu-m');
                 }
@@ -108,7 +108,7 @@
         }
     });
 
-    
+
     /*==================================================================
     [ Show / hide modal search ]*/
     $('.js-show-modal-search').on('click', function(){
@@ -170,7 +170,6 @@
     /*==================================================================
     [ Filter / Search product ]*/
     $('.js-show-filter').on('click',function(){
-        
         $(this).toggleClass('show-filter');
         $('.panel-filter').slideToggle(400);
 
@@ -191,27 +190,27 @@
     });
 
 
-
-
     /*==================================================================
-    [ Cart ]*/
-    $('.js-show-cart').on('click',function(){
+    [ Cart panel show / hide - dùng delegated để không bị mất sự kiện ]*/
+    $(document).on('click', '.js-show-cart', function(){
         $('.js-panel-cart').addClass('show-header-cart');
     });
 
-    $('.js-hide-cart').on('click',function(){
+    $(document).on('click', '.js-hide-cart', function(){
         $('.js-panel-cart').removeClass('show-header-cart');
     });
 
+
     /*==================================================================
-    [ Cart ]*/
-    $('.js-show-sidebar').on('click',function(){
+    [ Sidebar ]*/
+    $(document).on('click', '.js-show-sidebar', function(){
         $('.js-sidebar').addClass('show-sidebar');
     });
 
-    $('.js-hide-sidebar').on('click',function(){
+    $(document).on('click', '.js-hide-sidebar', function(){
         $('.js-sidebar').removeClass('show-sidebar');
     });
+
 
     /*==================================================================
     [ +/- num product ]*/
@@ -224,6 +223,7 @@
         var numProduct = Number($(this).prev().val());
         $(this).prev().val(numProduct + 1);
     });
+
 
     /*==================================================================
     [ Rating ]*/
@@ -279,5 +279,73 @@
     });
 
 
+    /*==================================================================
+    [ Add to cart bằng AJAX + reload mini cart ]*/
+    $(document).on('click', '.js-add-to-cart', function(e){
+        e.preventDefault();
+
+        let id  = $(this).data('id');
+        let qty = $(this).closest('.flex-w').find('.num-product').val() || 1;
+        let nameProduct = $('.js-name-detail').first().html() || 'Sản phẩm';
+
+        $.ajax({
+            url : 'cart_action.php',
+            type: 'POST',
+            data: {id: id, qty: qty, ajax: 1},
+            dataType: 'json',
+            success: function(res){
+                if (!res || res.status !== 'success') {
+                    swal("Lỗi", res && res.message ? res.message : "Không thể thêm sản phẩm vào giỏ.", "error");
+                    return;
+                }
+
+                // Popup báo thành công
+                swal(nameProduct, "đã được thêm vào giỏ hàng!", "success");
+
+                // Cập nhật badge trên icon giỏ (dùng tổng số item server trả về)
+                if (typeof res.total_items !== 'undefined') {
+                    $('.icon-header-noti.js-show-cart').attr('data-notify', res.total_items);
+                }
+
+                // Reload lại mini cart (toàn bộ mini_cart.php vào #mini-cart-container)
+                $('#mini-cart-container').load('mini_cart.php', function () {
+                    // Mở panel giỏ hàng sau khi load xong
+                    $('.js-panel-cart').addClass('show-header-cart');
+                });
+            },
+            error: function(){
+                swal("Lỗi", "Không thể thêm sản phẩm vào giỏ.", "error");
+            }
+        });
+    });
+
+
+    /*==================================================================
+    [ Mini cart: + / - / Xóa ]*/
+    $(document).on('click', '.btn-mini-inc, .btn-mini-dec, .btn-mini-remove', function(e){
+        e.preventDefault();
+
+        let id = $(this).data('id');
+        let action = $(this).hasClass('btn-mini-inc') ? 'inc'
+                   : $(this).hasClass('btn-mini-dec') ? 'dec'
+                   : 'remove';
+
+        $.post('cart_ajax.php', {id: id, action: action}, function(res){
+            if (!res || !res.success) return;
+
+            // Cập nhật tổng tiền mini cart
+            $('#mini-cart-total').text(res.cart_total);
+
+            // Cập nhật badge số lượng trên icon giỏ
+            $('.icon-header-noti.js-show-cart').attr('data-notify', res.cart_count);
+
+            // Cập nhật hoặc xoá item tương ứng
+            if (res.item_qty === 0) {
+                $('.header-cart-item[data-id="' + id + '"]').remove();
+            } else {
+                $('.header-cart-item[data-id="' + id + '"] .mini-qty').text(res.item_qty);
+            }
+        }, 'json');
+    });
 
 })(jQuery);

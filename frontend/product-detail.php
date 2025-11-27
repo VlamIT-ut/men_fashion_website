@@ -1,5 +1,21 @@
+<?php
+session_start();
+include 'db.php';
+
+// Hàm lấy tên hiển thị
+function getDisplayName($sessionValue, $default = 'Tài khoản') {
+    if (is_array($sessionValue)) {
+        if (!empty($sessionValue['username'])) return $sessionValue['username'];
+        if (!empty($sessionValue['HoTen']))    return $sessionValue['HoTen'];
+    } elseif (!empty($sessionValue)) {
+        return $sessionValue;
+    }
+    return $default;
+}
+?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
 	<title>Chi tiết sản phẩm</title>
 	<meta charset="UTF-8">
@@ -35,6 +51,90 @@
 	<link rel="stylesheet" type="text/css" href="css/main.css">
 <!--===============================================================================================-->
 </head>
+
+<?php
+// Lấy id từ URL
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+if ($id <= 0) {
+	echo "<h2 style='text-align:center;color:red;margin-top:40px'>Sản phẩm không tồn tại!</h2>";
+	exit;
+}
+
+// Lấy sản phẩm + 1 hình ảnh
+$sql = "
+    SELECT 
+        sp.ma_sp, 
+        sp.ten_sp, 
+        sp.gia, 
+        sp.mota,
+        sp.ma_loaisp,          -- khóa ngoại tới bảng loai_sp
+        l.ten_loai,            -- tên loại
+        MIN(img.ten_anh) AS ten_anh
+    FROM san_pham sp
+    LEFT JOIN hinhanh_sp img ON sp.ma_sp = img.ma_sp
+    LEFT JOIN loai_sp l      ON sp.ma_loaisp = l.ma_loaisp
+    WHERE sp.ma_sp = $id
+    GROUP BY 
+        sp.ma_sp, sp.ten_sp, sp.gia, sp.mota,
+        sp.ma_loaisp, l.ten_loai
+";
+
+$result = mysqli_query($conn, $sql);
+
+if (!$result || mysqli_num_rows($result) == 0) {
+	echo "<h2 style='text-align:center;color:red;margin-top:40px'>Không tìm thấy thông tin sản phẩm!</h2>";
+	exit;
+}
+
+
+$product = mysqli_fetch_assoc($result);
+
+// Lấy kích cỡ từ DB
+$sizes = [];
+$sql_size = "
+    SELECT kc.ten_kichco
+    FROM kich_co kc
+    JOIN kichco_sp ks ON kc.ma_kichco = ks.ma_kichco
+    WHERE ks.ma_sp = $id
+";
+$rs_size = mysqli_query($conn, $sql_size);
+if ($rs_size) {
+    while ($row = mysqli_fetch_assoc($rs_size)) {
+        $sizes[] = $row['ten_kichco'];
+    }
+}
+
+// Lấy màu sắc từ DB
+$colors = [];
+$sql_color = "
+    SELECT ms.ten_mau
+    FROM mau_sac ms
+    JOIN mau_sp msp ON ms.ma_mau = msp.ma_mau
+    WHERE msp.ma_sp = $id
+";
+$rs_color = mysqli_query($conn, $sql_color);
+if ($rs_color) {
+    while ($row = mysqli_fetch_assoc($rs_color)) {
+        $colors[] = $row['ten_mau'];
+    }
+}
+
+// Lấy tất cả ảnh của sản phẩm
+$images = [];
+$sqlImg  = "SELECT ten_anh FROM hinhanh_sp WHERE ma_sp = $id";
+$rsImg   = mysqli_query($conn, $sqlImg);
+
+while ($rowImg = mysqli_fetch_assoc($rsImg)) {
+    $images[] = $rowImg['ten_anh'];
+}
+
+// Nếu không có ảnh thì dùng 1 ảnh mặc định
+if (empty($images)) {
+    $images[] = 'product-01.jpg'; // bạn có thể copy file này vào thư mục images/products
+}
+?>
+
 <body class="animsition">
 	
 	<!-- Header -->
@@ -45,24 +145,59 @@
 			<div class="top-bar">
 				<div class="content-topbar flex-sb-m h-full container">
 					<div class="left-top-bar">
-						Free shipping for standard order over $100
+						Miễn phí vận chuyển cho đơn hàng từ 2.000.000₫
 					</div>
 
 					<div class="right-top-bar flex-w h-full">
 						<a href="#" class="flex-c-m trans-04 p-lr-25">
-							Help & FAQs
+							Trợ giúp & FAQs
+						</a>
+<?php if (isset($_SESSION['user'])): 
+   $displayName = getDisplayName($_SESSION['user'], 'Thành viên');
+   $firstChar   = mb_strtoupper(mb_substr($displayName, 0, 1, 'UTF-8'), 'UTF-8');
+?>
+    <!-- MINI PROFILE DROPDOWN DESKTOP -->
+    <div class="header-user-dropdown flex-c-m p-lr-25">
+        <div class="user-trigger js-user-trigger">
+            <div class="user-avatar">
+                <?php echo htmlspecialchars($firstChar); ?>
+            </div>
+            <div class="user-info">
+                <span class="user-name">
+                    <?php echo htmlspecialchars($displayName); ?>
+                </span>
+                <span class="user-role">
+                    Thành viên
+                </span>
+            </div>
+            <i class="zmdi zmdi-chevron-down user-chevron"></i>
+        </div>
+
+        <div class="user-menu">
+            <a href="profile.php" class="user-menu-item">
+                Hồ sơ của tôi
+            </a>
+            <a href="orders.php" class="user-menu-item">
+                Lịch sử giao dịch
+            </a>
+            <a href="logout.php" class="user-menu-item user-logout">
+                Đăng xuất
+            </a>
+        </div>
+    </div>
+<?php else: ?>
+    <!-- Chưa đăng nhập -->
+    <a href="login.php" class="flex-c-m trans-04 p-lr-25">
+        Đăng nhập
+    </a>
+<?php endif; ?>
+
+						<a href="#" class="flex-c-m trans-04 p-lr-25">
+							VI
 						</a>
 
 						<a href="#" class="flex-c-m trans-04 p-lr-25">
-							My Account
-						</a>
-
-						<a href="#" class="flex-c-m trans-04 p-lr-25">
-							EN
-						</a>
-
-						<a href="#" class="flex-c-m trans-04 p-lr-25">
-							USD
+							VND
 						</a>
 					</div>
 				</div>
@@ -72,7 +207,7 @@
 				<nav class="limiter-menu-desktop container">
 					
 					<!-- Logo desktop -->		
-					<a href="#" class="logo">
+					<a href="index.php" class="logo">
 						<img src="images/icons/logo-01.png" alt="IMG-LOGO">
 					</a>
 
@@ -80,32 +215,32 @@
 					<div class="menu-desktop">
 						<ul class="main-menu">
 							<li>
-								<a href="index.html">Home</a>
+								<a href="index.php">Trang chủ</a>
 								<ul class="sub-menu">
-									<li><a href="index.html">Homepage 1</a></li>
-									<li><a href="home-02.html">Homepage 2</a></li>
-									<li><a href="home-03.html">Homepage 3</a></li>
+									<li><a href="index.php">Trang chủ 1</a></li>
+									<li><a href="home-02.php">Trang chủ 2</a></li>
+									<li><a href="home-03.php">Trang chủ 3</a></li>
 								</ul>
 							</li>
 
-							<li>
-								<a href="product.html">Shop</a>
+							<li class="active-menu">
+								<a href="product.php">Cửa hàng</a>
 							</li>
 
 							<li class="label1" data-label1="hot">
-								<a href="shoping-cart.html">Features</a>
+								<a href="shoping-cart.php">Tính năng</a>
 							</li>
 
 							<li>
-								<a href="blog.html">Blog</a>
+								<a href="blog.php">Bài viết</a>
 							</li>
 
 							<li>
-								<a href="about.html">About</a>
+								<a href="about.php">Giới thiệu</a>
 							</li>
 
 							<li>
-								<a href="contact.html">Contact</a>
+								<a href="contact.php">Liên hệ</a>
 							</li>
 						</ul>
 					</div>	
@@ -115,14 +250,31 @@
 						<div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 js-show-modal-search">
 							<i class="zmdi zmdi-search"></i>
 						</div>
+<?php
+$cart = $_SESSION['cart'] ?? [];
+$badge = 0;
+foreach ($cart as $it) {
+    $badge += (int)($it['qty'] ?? 1);
+}
+?>
+<div class="icon-header-item cl2 hov-cl1 trans-04 p-r-11 p-l-10 icon-header-noti js-show-cart"
+     data-notify="<?php echo $badge; ?>">
+    <i class="zmdi zmdi-shopping-cart"></i>
+</div>
 
-						<div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-cart" data-notify="2">
-							<i class="zmdi zmdi-shopping-cart"></i>
-						</div>
+						
 
-						<a href="#" class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti" data-notify="0">
-							<i class="zmdi zmdi-favorite-outline"></i>
-						</a>
+
+						<?php
+$wishlist    = $_SESSION['wishlist'] ?? [];
+$wishCount   = count($wishlist);
+?>
+<a href="javascript:void(0);"
+   class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-wishlist"
+   data-notify="<?php echo $wishCount; ?>">
+    <i class="zmdi zmdi-favorite-outline"></i>
+</a>
+
 					</div>
 				</nav>
 			</div>	
@@ -132,22 +284,53 @@
 		<div class="wrap-header-mobile">
 			<!-- Logo moblie -->		
 			<div class="logo-mobile">
-				<a href="index.html"><img src="images/icons/logo-01.png" alt="IMG-LOGO"></a>
+				<a href="index.php"><img src="images/icons/logo-01.png" alt="IMG-LOGO"></a>
 			</div>
 
 			<!-- Icon header -->
-			<div class="wrap-icon-header flex-w flex-r-m m-r-15">
-				<div class="icon-header-item cl2 hov-cl1 trans-04 p-r-11 js-show-modal-search">
-					<i class="zmdi zmdi-search"></i>
-				</div>
+			<div class="wrap-icon-header flex-w flex-r-m">
+    <div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 js-show-modal-search">
+        <i class="zmdi zmdi-search"></i>
+    </div>
 
-				<div class="icon-header-item cl2 hov-cl1 trans-04 p-r-11 p-l-10 icon-header-noti js-show-cart" data-notify="2">
-					<i class="zmdi zmdi-shopping-cart"></i>
-				</div>
+    <?php
+    // Tính tổng số lượng trong giỏ để hiển thị badge
+    $cart = $_SESSION['cart'] ?? [];
+    $badge = 0;
+    foreach ($cart as $it) {
+        $badge += (int)($it['qty'] ?? 1);
+    }
+    ?>
+    <div class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-cart"
+         data-notify="<?php echo $badge; ?>">
+        <i class="zmdi zmdi-shopping-cart"></i>
+    </div>
 
-				<a href="#" class="dis-block icon-header-item cl2 hov-cl1 trans-04 p-r-11 p-l-10 icon-header-noti" data-notify="0">
-					<i class="zmdi zmdi-favorite-outline"></i>
-				</a>
+ <?php
+$wishlist    = $_SESSION['wishlist'] ?? [];
+$wishCount   = count($wishlist);
+?>
+<a href="javascript:void(0);"
+   class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-wishlist"
+   data-notify="<?php echo $wishCount; ?>">
+    <i class="zmdi zmdi-favorite-outline"></i>
+</a>
+
+</div>
+
+
+
+
+				<?php
+$wishlist    = $_SESSION['wishlist'] ?? [];
+$wishCount   = count($wishlist);
+?>
+<a href="javascript:void(0);"
+   class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti js-show-wishlist"
+   data-notify="<?php echo $wishCount; ?>">
+    <i class="zmdi zmdi-favorite-outline"></i>
+</a>
+
 			</div>
 
 			<!-- Button show menu -->
@@ -164,26 +347,61 @@
 			<ul class="topbar-mobile">
 				<li>
 					<div class="left-top-bar">
-						Free shipping for standard order over $100
+						Miễn phí vận chuyển cho đơn hàng từ 2.000.000₫
 					</div>
 				</li>
 
 				<li>
 					<div class="right-top-bar flex-w h-full">
 						<a href="#" class="flex-c-m p-lr-10 trans-04">
-							Help & FAQs
+							Trợ giúp & FAQs
+						</a>
+<?php if (isset($_SESSION['user'])): 
+   $displayName = getDisplayName($_SESSION['user'], 'Thành viên');
+   $firstChar   = mb_strtoupper(mb_substr($displayName, 0, 1, 'UTF-8'), 'UTF-8');
+?>
+    <!-- MINI PROFILE DROPDOWN DESKTOP -->
+    <div class="header-user-dropdown flex-c-m p-lr-25">
+        <div class="user-trigger js-user-trigger">
+            <div class="user-avatar">
+                <?php echo htmlspecialchars($firstChar); ?>
+            </div>
+            <div class="user-info">
+                <span class="user-name">
+                    <?php echo htmlspecialchars($displayName); ?>
+                </span>
+                <span class="user-role">
+                    Thành viên
+                </span>
+            </div>
+            <i class="zmdi zmdi-chevron-down user-chevron"></i>
+        </div>
+
+        <div class="user-menu">
+            <a href="profile.php" class="user-menu-item">
+                Hồ sơ của tôi
+            </a>
+            <a href="orders.php" class="user-menu-item">
+                Lịch sử giao dịch
+            </a>
+            <a href="logout.php" class="user-menu-item user-logout">
+                Đăng xuất
+            </a>
+        </div>
+    </div>
+<?php else: ?>
+    <!-- Chưa đăng nhập -->
+    <a href="login.php" class="flex-c-m trans-04 p-lr-25">
+        Đăng nhập
+    </a>
+<?php endif; ?>
+
+						<a href="#" class="flex-c-m p-lr-10 trans-04">
+							VI
 						</a>
 
 						<a href="#" class="flex-c-m p-lr-10 trans-04">
-							My Account
-						</a>
-
-						<a href="#" class="flex-c-m p-lr-10 trans-04">
-							EN
-						</a>
-
-						<a href="#" class="flex-c-m p-lr-10 trans-04">
-							USD
+							VND
 						</a>
 					</div>
 				</li>
@@ -191,11 +409,11 @@
 
 			<ul class="main-menu-m">
 				<li>
-					<a href="index.html">Trang chủ</a>
+					<a href="index.php">Trang chủ</a>
 					<ul class="sub-menu-m">
-						<li><a href="index.html">Trang chủ 1</a></li>
-						<li><a href="home-02.html">Trang chủ 2</a></li>
-						<li><a href="home-03.html">Trang chủ 3</a></li>
+						<li><a href="index.php">Trang chủ 1</a></li>
+						<li><a href="home-02.php">Trang chủ 2</a></li>
+						<li><a href="home-03.php">Trang chủ 3</a></li>
 					</ul>
 					<span class="arrow-main-menu-m">
 						<i class="fa fa-angle-right" aria-hidden="true"></i>
@@ -203,23 +421,23 @@
 				</li>
 
 				<li>
-					<a href="product.html">Cửa hàng</a>
+					<a href="product.php">Cửa hàng</a>
 				</li>
 
 				<li>
-					<a href="shoping-cart.html" class="label1 rs1" data-label1="hot">Tính năng</a>
+					<a href="shoping-cart.php" class="label1 rs1" data-label1="hot">Tính năng</a>
 				</li>
 
 				<li>
-					<a href="blog.html">Blog</a>
+					<a href="blog.php">Bài viết</a>
 				</li>
 
 				<li>
-					<a href="about.html">Giới thiệu</a>
+					<a href="about.php">Giới thiệu</a>
 				</li>
 
 				<li>
-					<a href="contact.html">Liên hệ</a>
+					<a href="contact.php">Liên hệ</a>
 				</li>
 			</ul>
 		</div>
@@ -240,123 +458,39 @@
 			</div>
 		</div>
 	</header>
+<div id="mini-cart-container">
+    <?php include 'mini_cart.php'; ?>
+</div>
+<div id="mini-wishlist-container">
+    <?php include 'mini_wishlist.php'; ?>
+</div>
+<?php include 'search_modal.php'; ?>
 
-	<!-- Cart -->
-	<div class="wrap-header-cart js-panel-cart">
-		<div class="s-full js-hide-cart"></div>
-
-		<div class="header-cart flex-col-l p-l-65 p-r-25">
-				<div class="header-cart-title flex-w flex-sb-m p-b-8">
-				<span class="mtext-103 cl2">
-					Giỏ hàng của bạn
-				</span>
-
-				<div class="fs-35 lh-10 cl2 p-lr-5 pointer hov-cl1 trans-04 js-hide-cart">
-					<i class="zmdi zmdi-close"></i>
-				</div>
-			</div>			<div class="header-cart-content flex-w js-pscroll">
-				<ul class="header-cart-wrapitem w-full">
-					<li class="header-cart-item flex-w flex-t m-b-12">
-						<div class="header-cart-item-img">
-							<img src="images/item-cart-01.jpg" alt="IMG">
-						</div>
-
-						<div class="header-cart-item-txt p-t-8">
-							<a href="#" class="header-cart-item-name m-b-18 hov-cl1 trans-04">
-								Áo sơ mi trắng
-							</a>
-
-							<span class="header-cart-item-info">
-								1 x $19.00
-							</span>
-						</div>
-					</li>
-
-					<li class="header-cart-item flex-w flex-t m-b-12">
-						<div class="header-cart-item-img">
-							<img src="images/item-cart-02.jpg" alt="IMG">
-						</div>
-
-						<div class="header-cart-item-txt p-t-8">
-							<a href="#" class="header-cart-item-name m-b-18 hov-cl1 trans-04">
-								Giày Converse All Star Hi
-							</a>
-
-							<span class="header-cart-item-info">
-								1 x $39.00
-							</span>
-						</div>
-					</li>
-
-					<li class="header-cart-item flex-w flex-t m-b-12">
-						<div class="header-cart-item-img">
-							<img src="images/item-cart-03.jpg" alt="IMG">
-						</div>
-
-						<div class="header-cart-item-txt p-t-8">
-							<a href="#" class="header-cart-item-name m-b-18 hov-cl1 trans-04">
-								Ví da Nixon Porter
-							</a>
-
-							<span class="header-cart-item-info">
-								1 x $17.00
-							</span>
-						</div>
-					</li>
-				</ul>
-				
-				<div class="w-full">
-					<div class="header-cart-total w-full p-tb-40">
-						Tổng cộng: 1.730.000₫
-					</div>
-
-					<div class="header-cart-buttons flex-w w-full">
-						<a href="shoping-cart.html" class="flex-c-m stext-101 cl0 size-107 bg3 bor2 hov-btn3 p-lr-15 trans-04 m-r-8 m-b-10">
-							Xem giỏ hàng
-						</a>
-
-						<a href="shoping-cart.html" class="flex-c-m stext-101 cl0 size-107 bg3 bor2 hov-btn3 p-lr-15 trans-04 m-b-10">
-							Thanh toán
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
 
 
 	<!-- breadcrumb -->
 	<div class="container">
 		<div class="bread-crumb flex-w p-l-25 p-r-15 p-t-30 p-lr-0-lg">
-			<a href="index.html" class="stext-109 cl8 hov-cl1 trans-04">
+			<a href="index.php" class="stext-109 cl8 hov-cl1 trans-04">
 				Trang chủ
 				<i class="fa fa-angle-right m-l-9 m-r-10" aria-hidden="true"></i>
 			</a>
 
-			<a href="product.html" class="stext-109 cl8 hov-cl1 trans-04">
-				Áo khoác
-				<i class="fa fa-angle-right m-l-9 m-r-10" aria-hidden="true"></i>
-			</a>
+<a href="product.php?category=<?php echo (int)$product['ma_loaisp']; ?>" 
+   class="stext-109 cl8 hov-cl1 trans-04">
+    <?php echo htmlspecialchars($product['ten_loai'] ?? 'Danh mục'); ?>
+    <i class="fa fa-angle-right m-l-9 m-r-10" aria-hidden="true"></i>
+</a>
+
 
 			<span class="stext-109 cl4">
-				Áo khoác nhẹ
-			</span>
+    <?php echo htmlspecialchars($product['ten_sp']); ?>
+</span>
+
 		</div>
 	</div>
 		
 
-<!-- chi tiét sp -->
-	<?php
-	require 'db.php';
-
-	$ma_sp = $_GET['id'];
-	$sl = "SELECT * FROM san_pham WHERE ma_sp = :ma_sp";
-	$stmt = $pdo->prepare($sl);
-	$stmt->execute(['ma_sp' => $ma_sp]);
-	$san_pham = $stmt->fetchAll();
-	?>
-
-	<?php foreach ($san_pham as $p) { ?>
 	<!-- Product Detail -->
 	<section class="sec-product-detail bg0 p-t-65 p-b-60">
 		<div class="container">
@@ -368,112 +502,98 @@
 							<div class="wrap-slick3-arrows flex-sb-m flex-w"></div>
 
 							<div class="slick3 gallery-lb">
-								<div class="item-slick3" data-thumb="images/product-detail-01.jpg">
-									<div class="wrap-pic-w pos-relative">
-										<img src="images/product-detail-01.jpg" alt="IMG-PRODUCT">
+									<?php foreach ($images as $img): ?>
+										<div class="item-slick3" data-thumb="images/products/<?php echo htmlspecialchars($img); ?>">
+											<div class="wrap-pic-w pos-relative">
+												<img src="images/products/<?php echo htmlspecialchars($img); ?>" alt="IMG-PRODUCT">
 
-										<a class="flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04" href="images/product-detail-01.jpg">
-											<i class="fa fa-expand"></i>
-										</a>
-									</div>
-								</div>
-
-								<div class="item-slick3" data-thumb="images/product-detail-02.jpg">
-									<div class="wrap-pic-w pos-relative">
-										<img src="images/product-detail-02.jpg" alt="IMG-PRODUCT">
-
-										<a class="flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04" href="images/product-detail-02.jpg">
-											<i class="fa fa-expand"></i>
-										</a>
-									</div>
-								</div>
-
-								<div class="item-slick3" data-thumb="images/product-detail-03.jpg">
-									<div class="wrap-pic-w pos-relative">
-										<img src="images/product-detail-03.jpg" alt="IMG-PRODUCT">
-
-										<a class="flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04" href="images/product-detail-03.jpg">
-											<i class="fa fa-expand"></i>
-										</a>
-									</div>
+												<a class="flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04"
+												href="images/products/<?php echo htmlspecialchars($img); ?>">
+													<i class="fa fa-expand"></i>
+												</a>
+											</div>
+										</div>
+									<?php endforeach; ?>
 								</div>
 							</div>
 						</div>
 					</div>
-				</div>
+				
 					
 				<div class="col-md-6 col-lg-5 p-b-30">
 					<div class="p-r-50 p-t-5 p-lr-0-lg">
-						<h4 class="mtext-105 cl2 js-name-detail p-b-14">
-							<?= $p['ten_sp']; ?>
-						</h4>
+					<h4 class="mtext-105 cl2 js-name-detail p-b-14">
+					<?php echo htmlspecialchars($product['ten_sp']); ?>
+				</h4>
 
-						<span class="mtext-106 cl2">
-							<?php echo number_format($p['gia_sp'], 0, ',', '.'); ?>
-						₫
-						</span>
+				<span class="mtext-106 cl2">
+					<?php 
+						if ($product['gia'] !== null) {
+							echo number_format($product['gia']) . "₫";
+						} else {
+							echo "Liên hệ";
+						}
+					?>
+				</span>
 
-						<p class="stext-102 cl3 p-t-23">
-							<?= $p['mota']; ?>
-						</p>
+				<p class="stext-102 cl3 p-t-23">
+					<?php 
+						echo !empty($product['mota']) 
+							? nl2br(htmlspecialchars($product['mota'])) 
+							: "Sản phẩm chưa có mô tả.";
+					?>
+				</p>
+					
+						
 						<!--  -->
-						<?php 
-						$sl_size = "SELECT kc.ten_kichco 
-							FROM kich_co kc
-							JOIN kichco_sp ks ON kc.ma_kichco = ks.ma_kichco
-							WHERE ks.ma_sp = :ma_sp";
-						$stmt_size = $pdo->prepare($sl_size);
-						$stmt_size->execute(['ma_sp' => $p['ma_sp']]);
-						$kich_co = $stmt_size->fetchAll();
-						?>
+					<div class="p-t-33">
+	<!-- Kích cỡ -->
+	<div class="flex-w flex-r-m p-b-10">
+		<div class="size-203 flex-c-m respon6">
+			Kích cỡ
+		</div>
 
-						<div class="p-t-33">
-							<div class="flex-w flex-r-m p-b-10">
-								<div class="size-203 flex-c-m respon6">
-									Kích cỡ
-								</div>
+		<div class="size-204 respon6-next">
+			<div class="rs1-select2 bor8 bg0">
+				<select class="js-select2" name="size">
+					<option value="">Chọn kích cỡ</option>
+					<?php if (!empty($sizes)): ?>
+						<?php foreach ($sizes as $kc): ?>
+							<option><?php echo htmlspecialchars($kc); ?></option>
+						<?php endforeach; ?>
+					<?php else: ?>
+						<option disabled>Đang cập nhật</option>
+					<?php endif; ?>
+				</select>
+				<div class="dropDownSelect2"></div>
+			</div>
+		</div>
+	</div>
 
-								<div class="size-204 respon6-next">
-									<div class="rs1-select2 bor8 bg0">
-										<select class="js-select2" name="time">
-											<option>Lựa chọn</option>
-											<?php foreach ($kich_co as $kc) { ?>
-												<option><?php echo $kc['ten_kichco']; ?></option>
-											<?php } ?>
-										</select>
-										<div class="dropDownSelect2"></div>
-									</div>
-								</div>
-							</div>
-							
-						<?php
-						$sl_mau = "SELECT ms.ten_mau
-							FROM mau_sac ms
-							JOIN mau_sp msp ON ms.ma_mau = msp.ma_mau
-							WHERE msp.ma_sp = :ma_sp";
+	<!-- Màu sắc -->
+	<div class="flex-w flex-r-m p-b-10">
+		<div class="size-203 flex-c-m respon6">
+			Màu sắc
+		</div>
 
-						$stmt_mau = $pdo->prepare($sl_mau);
-						$stmt_mau->execute(['ma_sp' => $p['ma_sp']]);
-						$mau_sac = $stmt_mau->fetchAll(); ?>
-							
-							<div class="flex-w flex-r-m p-b-10">
-								<div class="size-203 flex-c-m respon6">
-									Màu sắc
-								</div>
+		<div class="size-204 respon6-next">
+			<div class="rs1-select2 bor8 bg0">
+				<select class="js-select2" name="color">
+					<option value="">Chọn màu sắc</option>
+					<?php if (!empty($colors)): ?>
+						<?php foreach ($colors as $mau): ?>
+							<option><?php echo htmlspecialchars($mau); ?></option>
+						<?php endforeach; ?>
+					<?php else: ?>
+						<option disabled>Đang cập nhật</option>
+					<?php endif; ?>
+				</select>
+				<div class="dropDownSelect2"></div>
+			</div>
+		</div>
+	</div>
 
-								<div class="size-204 respon6-next">
-									<div class="rs1-select2 bor8 bg0">
-										<select class="js-select2" name="time">
-										<option>Lựa chọn</option>
-										<?php foreach ($mau_sac as $ms) { ?>
-											<option><?php echo $ms['ten_mau']; ?></option>
-										<?php } ?>
-										</select>
-										<div class="dropDownSelect2"></div>
-									</div>
-								</div>
-							</div>
-						<?php } ?>					
+
 							<div class="flex-w flex-r-m p-b-10">
 								<div class="size-204 flex-w flex-m respon6-next">
 									<div class="wrap-num-product flex-w m-r-20 m-tb-10">
@@ -488,12 +608,12 @@
 										</div>
 									</div>
 
-									<button class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail"
-											data-id="<?= $product['ma_sp'] ?>"
-											data-ten="<?= $product['ten_sp'] ?>"
-											data-gia="<?= $product['gia_sp'] ?>">
-										Thêm vào giỏ
-									</button>
+									<button
+    class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-add-to-cart"
+    data-id="<?php echo $product['ma_sp']; ?>"
+>
+    Thêm vào giỏ
+</button>
 
 								</div>
 							</div>	
@@ -502,7 +622,7 @@
 						<!--  -->
 						<div class="flex-w flex-m p-l-100 p-t-40 respon7">
 							<div class="flex-m bor9 p-r-10 m-r-11">
-								<a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100" data-tooltip="Add to Wishlist">
+								<a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100" data-tooltip="Thêm vào yêu thích">
 									<i class="zmdi zmdi-favorite"></i>
 								</a>
 							</div>
@@ -529,15 +649,15 @@
 					<!-- Nav tabs -->
 					<ul class="nav nav-tabs" role="tablist">
 						<li class="nav-item p-b-10">
-							<a class="nav-link active" data-toggle="tab" href="#description" role="tab">Description</a>
+							<a class="nav-link active" data-toggle="tab" href="#description" role="tab">Mô tả</a>
 						</li>
 
 						<li class="nav-item p-b-10">
-							<a class="nav-link" data-toggle="tab" href="#information" role="tab">Additional information</a>
+							<a class="nav-link" data-toggle="tab" href="#information" role="tab">Thông tin thêm</a>
 						</li>
 
 						<li class="nav-item p-b-10">
-							<a class="nav-link" data-toggle="tab" href="#reviews" role="tab">Reviews (1)</a>
+							<a class="nav-link" data-toggle="tab" href="#reviews" role="tab">Đánh giá (1)</a>
 						</li>
 					</ul>
 
@@ -547,10 +667,15 @@
 						<div class="tab-pane fade show active" id="description" role="tabpanel">
 							<div class="how-pos2 p-lr-15-md">
 								<p class="stext-102 cl6">
-									Aenean sit amet gravida nisi. Nam fermentum est felis, quis feugiat nunc fringilla sit amet. Ut in blandit ipsum. Quisque luctus dui at ante aliquet, in hendrerit lectus interdum. Morbi elementum sapien rhoncus pretium maximus. Nulla lectus enim, cursus et elementum sed, sodales vitae eros. Ut ex quam, porta consequat interdum in, faucibus eu velit. Quisque rhoncus ex ac libero varius molestie. Aenean tempor sit amet orci nec iaculis. Cras sit amet nulla libero. Curabitur dignissim, nunc nec laoreet consequat, purus nunc porta lacus, vel efficitur tellus augue in ipsum. Cras in arcu sed metus rutrum iaculis. Nulla non tempor erat. Duis in egestas nunc.
+									<?php 
+										echo !empty($product['mota']) 
+											? nl2br(htmlspecialchars($product['mota'])) 
+											: "Sản phẩm chưa có mô tả chi tiết.";
+									?>
 								</p>
 							</div>
 						</div>
+
 
 						<!-- - -->
 						<div class="tab-pane fade" id="information" role="tabpanel">
@@ -559,7 +684,7 @@
 									<ul class="p-lr-28 p-lr-15-sm">
 										<li class="flex-w flex-t p-b-7">
 											<span class="stext-102 cl3 size-205">
-												Weight
+												Khối lượng
 											</span>
 
 											<span class="stext-102 cl6 size-206">
@@ -569,7 +694,7 @@
 
 										<li class="flex-w flex-t p-b-7">
 											<span class="stext-102 cl3 size-205">
-												Dimensions
+												Kích thước
 											</span>
 
 											<span class="stext-102 cl6 size-206">
@@ -579,7 +704,7 @@
 
 										<li class="flex-w flex-t p-b-7">
 											<span class="stext-102 cl3 size-205">
-												Materials
+												Chất liệu
 											</span>
 
 											<span class="stext-102 cl6 size-206">
@@ -589,17 +714,17 @@
 
 										<li class="flex-w flex-t p-b-7">
 											<span class="stext-102 cl3 size-205">
-												Color
+												Màu sắc
 											</span>
 
 											<span class="stext-102 cl6 size-206">
-												Black, Blue, Grey, Green, Red, White
+												Đen, Xanh, Xám, Xanh lá, Đỏ, Trắng
 											</span>
 										</li>
 
 										<li class="flex-w flex-t p-b-7">
 											<span class="stext-102 cl3 size-205">
-												Size
+												Kích cỡ
 											</span>
 
 											<span class="stext-102 cl6 size-206">
@@ -638,7 +763,7 @@
 												</div>
 
 												<p class="stext-102 cl6">
-													Quod autem in homine praestantissimum atque optimum est, id deseruit. Apud ceteros autem philosophos
+													Sản phẩm đẹp, chất liệu tốt, mặc rất thoải mái. Rất hài lòng!
 												</p>
 											</div>
 										</div>
@@ -646,16 +771,16 @@
 										<!-- Add review -->
 										<form class="w-full">
 											<h5 class="mtext-108 cl2 p-b-7">
-												Add a review
+												Thêm đánh giá
 											</h5>
 
 											<p class="stext-102 cl6">
-												Your email address will not be published. Required fields are marked *
+												Email của bạn sẽ được bảo mật. Các trường bắt buộc được đánh dấu *
 											</p>
 
 											<div class="flex-w flex-m p-t-50 p-b-23">
 												<span class="stext-102 cl3 m-r-16">
-													Your Rating
+													Đánh giá của bạn
 												</span>
 
 												<span class="wrap-rating fs-18 cl11 pointer">
@@ -670,12 +795,12 @@
 
 											<div class="row p-b-25">
 												<div class="col-12 p-b-5">
-													<label class="stext-102 cl3" for="review">Your review</label>
+													<label class="stext-102 cl3" for="review">Nhận xét của bạn</label>
 													<textarea class="size-110 bor8 stext-102 cl2 p-lr-20 p-tb-10" id="review" name="review"></textarea>
 												</div>
 
 												<div class="col-sm-6 p-b-5">
-													<label class="stext-102 cl3" for="name">Name</label>
+													<label class="stext-102 cl3" for="name">Họ tên</label>
 													<input class="size-111 bor8 stext-102 cl2 p-lr-20" id="name" type="text" name="name">
 												</div>
 
@@ -686,7 +811,7 @@
 											</div>
 
 											<button class="flex-c-m stext-101 cl0 size-112 bg7 bor11 hov-btn3 p-lr-15 trans-04 m-b-10">
-												Submit
+												Gửi đánh giá
 											</button>
 										</form>
 									</div>
@@ -699,15 +824,52 @@
 		</div>
 
 		<div class="bg6 flex-c-m flex-w size-302 m-t-73 p-tb-15">
-			<span class="stext-107 cl6 p-lr-25">
-				Mã SP: JAK-01
-			</span>
+    <span class="stext-107 cl6 p-lr-25">
+        Mã SP: <?php echo htmlspecialchars($product['ma_sp']); ?>
+    </span>
 
-			<span class="stext-107 cl6 p-lr-25">
-				Danh mục: Áo khoác, Vest & Blazer
-			</span>
-		</div>
+    <span class="stext-107 cl6 p-lr-25">
+        Danh mục: 
+     <a href="product.php?category=<?php echo (int)$product['ma_loaisp']; ?>" 
+   class="stext-109 cl8 hov-cl1 trans-04">
+    <?php echo htmlspecialchars($product['ten_loai'] ?? 'Danh mục'); ?>
+    <i class="fa fa-angle-right m-l-9 m-r-10" aria-hidden="true"></i>
+</a>
+
+
 	</section>
+<?php
+// Lấy danh sách sản phẩm liên quan cùng danh mục
+$related = [];
+if (!empty($product['ma_loaisp'])) {
+    $ma_loaisp      = (int)$product['ma_loaisp'];
+    $ma_sp_hientai  = (int)$product['ma_sp'];
+
+    $sql_related = "
+        SELECT sp.ma_sp,
+               sp.ten_sp,
+               sp.gia,
+               MIN(img.ten_anh) AS ten_anh
+        FROM san_pham sp
+        LEFT JOIN hinhanh_sp img ON sp.ma_sp = img.ma_sp
+        WHERE sp.ma_loaisp = $ma_loaisp
+          AND sp.ma_sp <> $ma_sp_hientai
+        GROUP BY sp.ma_sp, sp.ten_sp, sp.gia
+        ORDER BY sp.ma_sp DESC
+        LIMIT 8
+    ";
+
+    $rs_related = mysqli_query($conn, $sql_related);
+    if ($rs_related) {
+        while ($row = mysqli_fetch_assoc($rs_related)) {
+            if (empty($row['ten_anh'])) {
+                $row['ten_anh'] = 'product-01.jpg';
+            }
+            $related[] = $row;
+        }
+    }
+}
+?>
 
 
 	<!-- Related Products -->
@@ -722,261 +884,52 @@
 			<!-- Slide2 -->
 			<div class="wrap-slick2">
 				<div class="slick2">
-					<div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
-						<!-- Block2 -->
-						<div class="block2">
-							<div class="block2-pic hov-img0">
-								<img src="images/product-01.jpg" alt="IMG-PRODUCT">
+    <?php if (!empty($related)): ?>
+        <?php foreach ($related as $item): ?>
+            <div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
+                <!-- Block2 -->
+                <div class="block2">
+                    <div class="block2-pic hov-img0">
+                        <img src="images/products/<?php echo htmlspecialchars($item['ten_anh']); ?>" alt="IMG-PRODUCT">
 
-								<a href="#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-									Quick View
-								</a>
-							</div>
+                        <a href="product-detail.php?id=<?php echo (int)$item['ma_sp']; ?>"
+                           class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04">
+                            Xem chi tiết
+                        </a>
+                    </div>
 
-							<div class="block2-txt flex-w flex-t p-t-14">
-								<div class="block2-txt-child1 flex-col-l ">
-									<a href="product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-										Áo Esprit Ruffle
-									</a>
+                    <div class="block2-txt flex-w flex-t p-t-14">
+                        <div class="block2-txt-child1 flex-col-l ">
+                            <a href="product-detail.php?id=<?php echo (int)$item['ma_sp']; ?>"
+                               class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
+                                <?php echo htmlspecialchars($item['ten_sp']); ?>
+                            </a>
 
-									<span class="stext-105 cl3">
-										$16.64
-									</span>
-								</div>
+                            <span class="stext-105 cl3">
+                                <?php echo $item['gia'] !== null ? number_format($item['gia']) . "₫" : "Liên hệ"; ?>
+                            </span>
+                        </div>
 
-								<div class="block2-txt-child2 flex-r p-t-3">
-									<a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-										<img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-										<img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-									</a>
-								</div>
-							</div>
-						</div>
-					</div>
+                        <div class="block2-txt-child2 flex-r p-t-3">
+                            <a href="javascript:void(0);"
+                               class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
+                                <img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
+                                <img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <p class="txt-center" style="width:100%;padding:20px 0;">
+            Chưa có sản phẩm liên quan trong danh mục này.
+        </p>
+    <?php endif; ?>
+</div>
 
-					<div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
-						<!-- Block2 -->
-						<div class="block2">
-							<div class="block2-pic hov-img0">
-								<img src="images/product-02.jpg" alt="IMG-PRODUCT">
 
-								<a href="#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-									Quick View
-								</a>
-							</div>
-
-							<div class="block2-txt flex-w flex-t p-t-14">
-								<div class="block2-txt-child1 flex-col-l ">
-									<a href="product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-										Túi Herschel
-									</a>
-
-									<span class="stext-105 cl3">
-										$35.31
-									</span>
-								</div>
-
-								<div class="block2-txt-child2 flex-r p-t-3">
-									<a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-										<img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-										<img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-									</a>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
-						<!-- Block2 -->
-						<div class="block2">
-							<div class="block2-pic hov-img0">
-								<img src="images/product-03.jpg" alt="IMG-PRODUCT">
-
-								<a href="#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-									Quick View
-								</a>
-							</div>
-
-							<div class="block2-txt flex-w flex-t p-t-14">
-								<div class="block2-txt-child1 flex-col-l ">
-									<a href="product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-										Quần kẻ caro
-									</a>
-
-									<span class="stext-105 cl3">
-										$25.50
-									</span>
-								</div>
-
-								<div class="block2-txt-child2 flex-r p-t-3">
-									<a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-										<img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-										<img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-									</a>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
-						<!-- Block2 -->
-						<div class="block2">
-							<div class="block2-pic hov-img0">
-								<img src="images/product-04.jpg" alt="IMG-PRODUCT">
-
-								<a href="#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-									Quick View
-								</a>
-							</div>
-
-							<div class="block2-txt flex-w flex-t p-t-14">
-								<div class="block2-txt-child1 flex-col-l ">
-									<a href="product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-										Áo trench cổ điển
-									</a>
-
-									<span class="stext-105 cl3">
-										$75.00
-									</span>
-								</div>
-
-								<div class="block2-txt-child2 flex-r p-t-3">
-									<a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-										<img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-										<img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-									</a>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
-						<!-- Block2 -->
-						<div class="block2">
-							<div class="block2-pic hov-img0">
-								<img src="images/product-05.jpg" alt="IMG-PRODUCT">
-
-								<a href="#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-									Quick View
-								</a>
-							</div>
-
-							<div class="block2-txt flex-w flex-t p-t-14">
-								<div class="block2-txt-child1 flex-col-l ">
-									<a href="product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-										Áo len túi trước
-									</a>
-
-									<span class="stext-105 cl3">
-										$34.75
-									</span>
-								</div>
-
-								<div class="block2-txt-child2 flex-r p-t-3">
-									<a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-										<img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-										<img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-									</a>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
-						<!-- Block2 -->
-						<div class="block2">
-							<div class="block2-pic hov-img0">
-								<img src="images/product-06.jpg" alt="IMG-PRODUCT">
-
-								<a href="#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-									Quick View
-								</a>
-							</div>
-
-							<div class="block2-txt flex-w flex-t p-t-14">
-								<div class="block2-txt-child1 flex-col-l ">
-									<a href="product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-										Đồng hồ cổ điển
-									</a>
-
-									<span class="stext-105 cl3">
-										$93.20
-									</span>
-								</div>
-
-								<div class="block2-txt-child2 flex-r p-t-3">
-									<a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-										<img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-										<img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-									</a>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
-						<!-- Block2 -->
-						<div class="block2">
-							<div class="block2-pic hov-img0">
-								<img src="images/product-07.jpg" alt="IMG-PRODUCT">
-
-								<a href="#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-									Quick View
-								</a>
-							</div>
-
-							<div class="block2-txt flex-w flex-t p-t-14">
-								<div class="block2-txt-child1 flex-col-l ">
-									<a href="product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-										Áo cotton co giãn
-									</a>
-
-									<span class="stext-105 cl3">
-										$52.66
-									</span>
-								</div>
-
-								<div class="block2-txt-child2 flex-r p-t-3">
-									<a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-										<img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-										<img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-									</a>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="item-slick2 p-l-15 p-r-15 p-t-15 p-b-15">
-						<!-- Block2 -->
-						<div class="block2">
-							<div class="block2-pic hov-img0">
-								<img src="images/product-08.jpg" alt="IMG-PRODUCT">
-
-								<a href="#" class="block2-btn flex-c-m stext-103 cl2 size-102 bg0 bor2 hov-btn1 p-lr-15 trans-04 js-show-modal1">
-									Quick View
-								</a>
-							</div>
-
-							<div class="block2-txt flex-w flex-t p-t-14">
-								<div class="block2-txt-child1 flex-col-l ">
-									<a href="product-detail.html" class="stext-104 cl4 hov-cl1 trans-04 js-name-b2 p-b-6">
-										Áo in metallic
-									</a>
-
-									<span class="stext-105 cl3">
-										$18.96
-									</span>
-								</div>
-
-								<div class="block2-txt-child2 flex-r p-t-3">
-									<a href="#" class="btn-addwish-b2 dis-block pos-relative js-addwish-b2">
-										<img class="icon-heart1 dis-block trans-04" src="images/icons/icon-heart-01.png" alt="ICON">
-										<img class="icon-heart2 dis-block trans-04 ab-t-l" src="images/icons/icon-heart-02.png" alt="ICON">
-									</a>
-								</div>
-							</div>
-						</div>
-					</div>
+					<!-- Có thể giữ nguyên thêm các block2 khác, mình đã sửa 4 block đầu cho bạn làm mẫu -->
 				</div>
 			</div>
 		</div>
@@ -1001,7 +954,7 @@
 
 						<li class="p-b-10">
 							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Vest & Blazer
+								Vest &amp; Blazer
 							</a>
 						</li>
 
@@ -1027,25 +980,25 @@
 
 				<div class="col-sm-6 col-lg-3 p-b-50">
 					<h4 class="stext-301 cl0 p-b-30">
-						Help
+						Trợ giúp
 					</h4>
 
 					<ul>
 						<li class="p-b-10">
 							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Track Order
+								Theo dõi đơn hàng
 							</a>
 						</li>
 
 						<li class="p-b-10">
 							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Returns 
+								Đổi trả 
 							</a>
 						</li>
 
 						<li class="p-b-10">
 							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Shipping
+								Vận chuyển
 							</a>
 						</li>
 
@@ -1059,11 +1012,11 @@
 
 				<div class="col-sm-6 col-lg-3 p-b-50">
 					<h4 class="stext-301 cl0 p-b-30">
-						GET IN TOUCH
+						Liên hệ
 					</h4>
 
 					<p class="stext-107 cl7 size-201">
-						Any questions? Let us know in store at 8th floor, 379 Hudson St, New York, NY 10018 or call us on (+1) 96 716 6879
+						Có câu hỏi gì không? Hãy đến cửa hàng của chúng tôi tại Số 1 Võ Văn Ngân, Phường Linh Chiểu, TP Thủ Đức, TP HCM hoặc gọi cho chúng tôi theo số (+84) 123 456 789
 					</p>
 
 					<div class="p-t-27">
@@ -1083,7 +1036,7 @@
 
 				<div class="col-sm-6 col-lg-3 p-b-50">
 					<h4 class="stext-301 cl0 p-b-30">
-						Newsletter
+						Bản tin
 					</h4>
 
 					<form>
@@ -1094,7 +1047,7 @@
 
 						<div class="p-t-18">
 							<button class="flex-c-m stext-101 cl0 size-103 bg1 bor1 hov-btn2 p-lr-15 trans-04">
-								Subscribe
+								Đăng ký
 							</button>
 						</div>
 					</form>
@@ -1125,10 +1078,7 @@
 				</div>
 
 				<p class="stext-107 cl6 txt-center">
-					<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-Bản quyền &copy;<script>document.write(new Date().getFullYear());</script> | Thiết kế bởi <a href="https://colorlib.com" target="_blank">Colorlib</a>
-<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-
+					Bản quyền &copy;<script>document.write(new Date().getFullYear());</script> | Thiết kế bởi <a href="https://colorlib.com" target="_blank">Colorlib</a>
 				</p>
 			</div>
 		</div>
@@ -1160,88 +1110,112 @@ Bản quyền &copy;<script>document.write(new Date().getFullYear());</script> |
 								<div class="wrap-slick3-arrows flex-sb-m flex-w"></div>
 
 								<div class="slick3 gallery-lb">
-									<div class="item-slick3" data-thumb="images/product-detail-01.jpg">
-										<div class="wrap-pic-w pos-relative">
-											<img src="images/product-detail-01.jpg" alt="IMG-PRODUCT">
+    <?php foreach ($images as $img): ?>
+        <div class="item-slick3" data-thumb="images/products/<?php echo htmlspecialchars($img); ?>">
+            <div class="wrap-pic-w pos-relative">
+                <img src="images/products/<?php echo htmlspecialchars($img); ?>" alt="IMG-PRODUCT">
 
-											<a class="flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04" href="images/product-detail-01.jpg">
-												<i class="fa fa-expand"></i>
-											</a>
-										</div>
-									</div>
+                <a class="flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04"
+                   href="images/products/<?php echo htmlspecialchars($img); ?>">
+                    <i class="fa fa-expand"></i>
+                </a>
+            </div>
+        </div>
+    <?php endforeach; ?>
+</div>
 
-									<div class="item-slick3" data-thumb="images/product-detail-02.jpg">
-										<div class="wrap-pic-w pos-relative">
-											<img src="images/product-detail-02.jpg" alt="IMG-PRODUCT">
-
-											<a class="flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04" href="images/product-detail-02.jpg">
-												<i class="fa fa-expand"></i>
-											</a>
-										</div>
-									</div>
-
-									<div class="item-slick3" data-thumb="images/product-detail-03.jpg">
-										<div class="wrap-pic-w pos-relative">
-											<img src="images/product-detail-03.jpg" alt="IMG-PRODUCT">
-
-											<a class="flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04" href="images/product-detail-03.jpg">
-												<i class="fa fa-expand"></i>
-											</a>
-										</div>
-									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 					
 					<div class="col-md-6 col-lg-5 p-b-30">
-						<div class="p-r-50 p-t-5 p-lr-0-lg">
-							<h4 class="mtext-105 cl2 js-name-detail p-b-14">
-								Lightweight Jacket
-							</h4>
+						 <div class="p-r-50 p-t-5 p-lr-0-lg">
+						<h4 class="mtext-105 cl2 js-name-detail p-b-14">
+    <?php echo htmlspecialchars($product['ten_sp']); ?>
+</h4>
 
-							<span class="mtext-106 cl2">
-								$58.79
-							</span>
+<span class="mtext-106 cl2">
+    <?php 
+        if ($product['gia'] !== null) {
+            echo number_format($product['gia']) . "₫";
+        } else {
+            echo "Liên hệ";
+        }
+    ?>
+</span>
 
-							<p class="stext-102 cl3 p-t-23">
-								Nulla eget sem vitae eros pharetra viverra. Nam vitae luctus ligula. Mauris consequat ornare feugiat.
-							</p>
+<p class="stext-102 cl3 p-t-23">
+    <?php 
+        echo !empty($product['mota']) 
+            ? nl2br(htmlspecialchars($product['mota'])) 
+            : "Sản phẩm chưa có mô tả.";
+    ?>
+</p>
+
 							
 							<!--  -->
 							<div class="p-t-33">
+	<!-- Kích cỡ -->
+	<div class="flex-w flex-r-m p-b-10">
+		<div class="size-203 flex-c-m respon6">
+			Kích cỡ
+		</div>
+
+		<div class="size-204 respon6-next">
+			<div class="rs1-select2 bor8 bg0">
+				<select class="js-select2" name="size">
+					<option value="">Chọn kích cỡ</option>
+					<?php if (!empty($sizes)): ?>
+						<?php foreach ($sizes as $kc): ?>
+							<option><?php echo htmlspecialchars($kc); ?></option>
+						<?php endforeach; ?>
+					<?php else: ?>
+						<option disabled>Đang cập nhật</option>
+					<?php endif; ?>
+				</select>
+				<div class="dropDownSelect2"></div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Màu sắc -->
+	<div class="flex-w flex-r-m p-b-10">
+		<div class="size-203 flex-c-m respon6">
+			Màu sắc
+		</div>
+
+		<div class="size-204 respon6-next">
+			<div class="rs1-select2 bor8 bg0">
+				<select class="js-select2" name="color">
+					<option value="">Chọn màu sắc</option>
+					<?php if (!empty($colors)): ?>
+						<?php foreach ($colors as $mau): ?>
+							<option><?php echo htmlspecialchars($mau); ?></option>
+						<?php endforeach; ?>
+					<?php else: ?>
+						<option disabled>Đang cập nhật</option>
+					<?php endif; ?>
+				</select>
+				<div class="dropDownSelect2"></div>
+			</div>
+		</div>
+	</div>
+
+
 								<div class="flex-w flex-r-m p-b-10">
 									<div class="size-203 flex-c-m respon6">
-										Size
+										Màu sắc
 									</div>
 
 									<div class="size-204 respon6-next">
 										<div class="rs1-select2 bor8 bg0">
-											<select class="js-select2" name="time">
-												<option>Choose an option</option>
-												<option>Size S</option>
-												<option>Size M</option>
-												<option>Size L</option>
-												<option>Size XL</option>
-											</select>
-											<div class="dropDownSelect2"></div>
-										</div>
-									</div>
-								</div>
-
-								<div class="flex-w flex-r-m p-b-10">
-									<div class="size-203 flex-c-m respon6">
-										Color
-									</div>
-
-									<div class="size-204 respon6-next">
-										<div class="rs1-select2 bor8 bg0">
-											<select class="js-select2" name="time">
-												<option>Choose an option</option>
-												<option>Red</option>
-												<option>Blue</option>
-												<option>White</option>
-												<option>Grey</option>
+											<select class="js-select2" name="color">
+												<option>Chọn màu sắc</option>
+												<option>Đỏ</option>
+												<option>Xanh dương</option>
+												<option>Trắng</option>
+												<option>Xám</option>
 											</select>
 											<div class="dropDownSelect2"></div>
 										</div>
@@ -1262,9 +1236,12 @@ Bản quyền &copy;<script>document.write(new Date().getFullYear());</script> |
 											</div>
 										</div>
 
-										<button class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail">
-											Thêm vào giỏ
-										</button>
+										<button
+    class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-add-to-cart"
+    data-id="<?php echo $product['ma_sp']; ?>"
+>
+    Thêm vào giỏ
+</button>
 									</div>
 								</div>	
 							</div>
@@ -1272,7 +1249,7 @@ Bản quyền &copy;<script>document.write(new Date().getFullYear());</script> |
 							<!--  -->
 							<div class="flex-w flex-m p-l-100 p-t-40 respon7">
 								<div class="flex-m bor9 p-r-10 m-r-11">
-									<a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100" data-tooltip="Add to Wishlist">
+									<a href="#" class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100" data-tooltip="Thêm vào yêu thích">
 										<i class="zmdi zmdi-favorite"></i>
 									</a>
 								</div>
@@ -1298,6 +1275,41 @@ Bản quyền &copy;<script>document.write(new Date().getFullYear());</script> |
 
 <!--===============================================================================================-->	
 	<script src="vendor/jquery/jquery-3.2.1.min.js"></script>
+	<script>
+// Bỏ thích ngay trong mini favourite (panel wishlist)
+$(document).on('click', '.js-remove-wish', function(e){
+    e.preventDefault();
+
+    var id = $(this).data('id');
+
+    $.post('wishlist_action.php', {
+        id: id,
+        action: 'remove',
+        ajax: 1
+    }, function(res){
+        if (res.status === 'success') {
+
+            // Cập nhật lại HTML mini wishlist
+            $('#mini-wishlist-container').html(res.mini_wishlist_html);
+
+            // Cập nhật badge số tim trên icon header
+            $('.js-show-wishlist').attr('data-notify', res.wish_count);
+
+            // ✅ QUAN TRỌNG: xoá class tim xanh trong danh sách sản phẩm
+            var heart = $('.btn-addwish-b2[href*="id=' + id + '"]');
+
+            heart.removeClass('js-addedwish-b2');
+        } 
+        else {
+            alert(res.message || 'Có lỗi khi xoá khỏi yêu thích.');
+        }
+    }, 'json').fail(function(){
+        alert('Không gọi được wishlist_action.php');
+    });
+});
+
+</script>
+
 <!--===============================================================================================-->
 	<script src="vendor/animsition/js/animsition.min.js"></script>
 <!--===============================================================================================-->
@@ -1378,6 +1390,10 @@ Bản quyền &copy;<script>document.write(new Date().getFullYear());</script> |
 		});
 	
 	</script>
+	
+
+
+
 <!--===============================================================================================-->
 	<script src="vendor/perfect-scrollbar/perfect-scrollbar.min.js"></script>
 	<script>
@@ -1397,6 +1413,19 @@ Bản quyền &copy;<script>document.write(new Date().getFullYear());</script> |
 	</script>
 <!--===============================================================================================-->
 	<script src="js/main.js"></script>
+<script>
+    // Toggle mini profile
+    $(document).on('click', '.js-user-trigger', function (e) {
+        e.stopPropagation();
+        var $dropdown = $(this).closest('.header-user-dropdown');
+        $('.header-user-dropdown').not($dropdown).removeClass('open');
+        $dropdown.toggleClass('open');
+    });
 
+    // Click ra ngoài thì đóng
+    $(document).on('click', function () {
+        $('.header-user-dropdown').removeClass('open');
+    });
+</script>
 </body>
 </html>
