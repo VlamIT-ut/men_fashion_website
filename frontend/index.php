@@ -156,6 +156,7 @@ if (isset($_POST['quick_view_ajax']) && isset($_POST['ma_sp'])) {
 	<link rel="stylesheet" type="text/css" href="css/util.css">
 	<link rel="stylesheet" type="text/css" href="css/main.css">
 <!--===============================================================================================-->
+<script src="vendor/jquery/jquery-3.2.1.min.js"></script>
 </head>
 
 <body class="animsition">
@@ -243,16 +244,12 @@ if (isset($_POST['quick_view_ajax']) && isset($_POST['ma_sp'])) {
 									<a href="index.php">Trang chủ</a>
 							</li>
 
-							<li>
-									<a href="product.php">Cửa hàng</a>
-							</li>
-
 							<li class="label1" data-label1="hot">
-									<a href="shoping-cart.php">Tính năng</a>
+								<a href="product.php">Sản phẩm</a>
 							</li>
 
 							<li>
-								<a href="blog.php">Blog</a>
+									<a href="shoping-cart.php">Giỏ hàng</a>
 							</li>
 
 							<li>
@@ -285,7 +282,7 @@ if (isset($_POST['quick_view_ajax']) && isset($_POST['ma_sp'])) {
 
 					</div>
 
-													<?php
+						<?php
 							$wishlist    = $_SESSION['wishlist'] ?? [];
 							$wishCount   = count($wishlist);
 							?>
@@ -481,20 +478,14 @@ $wishCount   = count($wishlist);
 	<section class="section-slide">
 		<div class="wrap-slick1">
 			<div class="slick1">
-				<div class="item-slick1" style="background-image: url(images/slide-01.jpg);">
+				<div class="item-slick1" style="background-image: url(images/slide-03.jpg);">
 					<div class="container h-full">
 						<div class="flex-col-l-m h-full p-t-100 p-b-30 respon5">
 										<div class="layer-slick1 animated visible-false" data-appear="fadeInDown" data-delay="0">
 											<span class="ltext-101 cl2 respon2">
-												Thời Trang Nam Cao Cấp
+												Thời trang TRENDY
 											</span>
 										</div>
-					
-											<div class="layer-slick1 animated visible-false" data-appear="fadeInUp" data-delay="800">
-												<h2 class="ltext-201 cl2 p-t-19 p-b-43 respon1">
-													BST Thu Đông 2025
-												</h2>
-											</div>
 					
 										<div class="layer-slick1 animated visible-false" data-appear="zoomIn" data-delay="1600">
 											<a href="product.php" class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04">
@@ -508,41 +499,11 @@ $wishCount   = count($wishlist);
 				<div class="item-slick1" style="background-image: url(images/slide-02.jpg);">
 					<div class="container h-full">
 						<div class="flex-col-l-m h-full p-t-100 p-b-30 respon5">
-							<div class="layer-slick1 animated visible-false" data-appear="rollIn" data-delay="0">
-									<span class="ltext-101 cl2 respon2">
-										Phong Cách Công Sở
-									</span>
-								</div>
-						
-									<div class="layer-slick1 animated visible-false" data-appear="lightSpeedIn" data-delay="800">
-										<h2 class="ltext-201 cl2 p-t-19 p-b-43 respon1">
-											Áo Vest & Quần Tây
-										</h2>
-										</div>
-						
-									<div class="layer-slick1 animated visible-false" data-appear="slideInUp" data-delay="1600">
-										<a href="product.php" class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04">
-											Xem bộ sưu tập
-										</a>
-										</div>
-						</div>
-					</div>
-				</div>
-
-				<div class="item-slick1" style="background-image: url(images/slide-03.jpg);">
-					<div class="container h-full">
-						<div class="flex-col-l-m h-full p-t-100 p-b-30 respon5">
 							<div class="layer-slick1 animated visible-false" data-appear="rotateInDownLeft" data-delay="0">
 									<span class="ltext-101 cl2 respon2">
-										Phong Cách Trẻ
+										Phong cách MỚI
 									</span>
-								</div>
-						
-								<div class="layer-slick1 animated visible-false" data-appear="rotateInUpRight" data-delay="800">
-									<h2 class="ltext-201 cl2 p-t-19 p-b-43 respon1">
-										Thời Trang Đường Phố
-									</h2>
-									</div>
+							</div>
 						
 								<div class="layer-slick1 animated visible-false" data-appear="rotateIn" data-delay="1600">
 									<a href="product.php" class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04">
@@ -704,34 +665,6 @@ $wishlist = $_SESSION['wishlist'] ?? [];
 	<!-- Footer -->
 	<footer class="bg3 p-t-75 p-b-32">
 		<div class="container">
-			<div class="row">
-					<div class="col-sm-6 col-lg-3 p-b-50">
-					<ul>
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Theo dõi đơn hàng
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Hoàn trả
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Vận chuyển
-							</a>
-						</li>
-
-						<li class="p-b-10">
-							<a href="#" class="stext-107 cl7 hov-cl1 trans-04">
-								Câu hỏi thường gặp
-							</a>
-						</li>
-					</ul>
-				</div>
 
 				<div class="col-sm-6 col-lg-3 p-b-50">
 					<h4 class="stext-301 cl0 p-b-30">
@@ -739,7 +672,8 @@ $wishlist = $_SESSION['wishlist'] ?? [];
 					</h4>
 
 					<p class="stext-107 cl7 size-201">
-						Có câu hỏi? Hãy liên hệ cửa hàng tại tầng 8, 379 Hudson St, New York, NY 10018 hoặc gọi số (+1) 96 716 6879
+						Địa chỉ: 70 Tô Ký, TPHCM 
+						<br>Điện thoại: +84 123 456 789
 					</p>
 
 					<div class="p-t-27">
@@ -1115,20 +1049,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <?php unset($_SESSION['show_cart']); endif; ?>
-<script>
-    // Toggle mini profile
-    $(document).on('click', '.js-user-trigger', function (e) {
-        e.stopPropagation();
-        var $dropdown = $(this).closest('.header-user-dropdown');
-        $('.header-user-dropdown').not($dropdown).removeClass('open');
-        $dropdown.toggleClass('open');
-    });
-
-    // Click ra ngoài thì đóng
-    $(document).on('click', function () {
-        $('.header-user-dropdown').removeClass('open');
-    });
-</script>
-<script src="vendor/jquery/jquery-3.2.1.min.js"></script>
 </body>
 </html>

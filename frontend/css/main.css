@@ -3352,6 +3352,8 @@ input.num-product::-webkit-inner-spin-button {
 /* MINI PROFILE DROPDOWN */
 .header-user-dropdown {
     position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .header-user-dropdown .user-trigger {
