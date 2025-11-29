@@ -52,9 +52,36 @@ if (isset($_POST['quick_view_ajax']) && isset($_POST['ma_sp'])) {
         if(empty($images)) $images[] = $p['ten_anh'] ?? 'product-01.jpg';
 
         // Lấy size/màu (Query mẫu)
-        $sizes = ['S', 'M', 'L', 'XL']; // Tạm thời hardcode để test hiển thị trước
-        $colors = ['Đỏ', 'Xanh', 'Trắng']; 
-        
+       // ===== LẤY SIZE TỪ DB =====
+$sizes = [];
+$sql_size = "
+    SELECT kc.ten_kichco
+    FROM kich_co kc
+    JOIN kichco_sp ks ON kc.ma_kichco = ks.ma_kichco
+    WHERE ks.ma_sp = $ma_sp
+";
+$rs_size = mysqli_query($conn, $sql_size);
+if ($rs_size) {
+    while ($row = mysqli_fetch_assoc($rs_size)) {
+        $sizes[] = $row['ten_kichco'];
+    }
+}
+
+// ===== LẤY MÀU TỪ DB =====
+$colors = [];
+$sql_color = "
+    SELECT ms.ten_mau
+    FROM mau_sac ms
+    JOIN mau_sp msp ON ms.ma_mau = msp.ma_mau
+    WHERE msp.ma_sp = $ma_sp
+";
+$rs_color = mysqli_query($conn, $sql_color);
+if ($rs_color) {
+    while ($row = mysqli_fetch_assoc($rs_color)) {
+        $colors[] = $row['ten_mau'];
+    }
+}
+
         // --- XUẤT HTML RA CHO JS ---
         ?>
         <div class="row">
@@ -91,23 +118,69 @@ if (isset($_POST['quick_view_ajax']) && isset($_POST['ma_sp'])) {
                         <?php echo nl2br(htmlspecialchars($p['mota'] ?? '')); ?>
                     </p>
                     
-                    <div class="p-t-33">
-                        <div class="flex-w flex-r-m p-b-10">
-                            <div class="size-204 flex-w flex-m respon6-next">
-                                <div class="wrap-num-product flex-w m-r-20 m-tb-10">
-                                    <div class="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m"><i class="fs-16 zmdi zmdi-minus"></i></div>
-                                    <input class="mtext-104 cl3 txt-center num-product" type="number" name="num-product" value="1">
-                                    <div class="btn-num-product-up cl8 hov-btn3 trans-04 flex-c-m"><i class="fs-16 zmdi zmdi-plus"></i></div>
-                                </div>
-                                <button class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail" data-id="<?php echo $p['ma_sp']; ?>">
-                                    Thêm vào giỏ
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                   <div class="p-t-33">
+
+    <!-- SIZE -->
+    <div class="flex-w flex-r-m p-b-10">
+        <div class="size-203 flex-c-m respon6">
+            Kích cỡ
+        </div>
+        <div class="size-204 respon6-next">
+            <div class="rs1-select2 bor8 bg0">
+                <select class="js-select2-modal" name="size">
+                    <option value="">Chọn kích cỡ</option>
+                    <?php foreach ($sizes as $kc): ?>
+                        <option><?php echo htmlspecialchars($kc); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <div class="dropDownSelect2"></div>
             </div>
         </div>
+    </div>
+
+    <!-- MÀU SẮC -->
+    <div class="flex-w flex-r-m p-b-10">
+        <div class="size-203 flex-c-m respon6">
+            Màu sắc
+        </div>
+        <div class="size-204 respon6-next">
+            <div class="rs1-select2 bor8 bg0">
+                <select class="js-select2-modal" name="color">
+                    <option value="">Chọn màu sắc</option>
+                    <?php foreach ($colors as $mau): ?>
+                        <option><?php echo htmlspecialchars($mau); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <div class="dropDownSelect2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SỐ LƯỢNG + THÊM VÀO GIỎ -->
+    <div class="flex-w flex-r-m p-b-10">
+        <div class="size-204 flex-w flex-m respon6-next">
+            <div class="wrap-num-product flex-w m-r-20 m-tb-10">
+                <div class="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m">
+                    <i class="fs-16 zmdi zmdi-minus"></i>
+                </div>
+
+                <input class="mtext-104 cl3 txt-center num-product"
+                       type="number" name="num-product" value="1">
+
+                <div class="btn-num-product-up cl8 hov-btn3 trans-04 flex-c-m">
+                    <i class="fs-16 zmdi zmdi-plus"></i>
+                </div>
+            </div>
+
+            <button class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail"
+                    data-id="<?php echo $p['ma_sp']; ?>">
+                Thêm vào giỏ
+            </button>
+        </div>
+    </div>
+
+</div>
+
         <?php
     } else {
         echo "Không tìm thấy sản phẩm.";
@@ -736,7 +809,14 @@ $wishlist = $_SESSION['wishlist'] ?? [];
 
 				<p class="stext-107 cl6 txt-center">
 					<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-					Bản quyền &copy;<script>document.write(new Date().getFullYear());</script> Mọi quyền được bảo lưu | Giao diện được thiết kế bằng <i class="fa fa-heart-o" aria-hidden="true"></i> bởi <a href="https://colorlib.com" target="_blank">Colorlib</a>
+				Bản quyền &copy;<span id="year"></span> ...
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var y = document.getElementById('year');
+        if (y) y.textContent = new Date().getFullYear();
+    });
+</script>
+
 					<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
 				</p>
 			</div>
@@ -771,45 +851,46 @@ $wishlist = $_SESSION['wishlist'] ?? [];
 
 	<script>
 	// QUICK VIEW AJAX
-	$(document).on('click', '.js-show-modal1', function(e){
-		e.preventDefault();
-		var id = $(this).data('id');
-		$.post('product.php', {
-			lay_thong_tin_sp_ajax: 1,
-			ma_sp: id
-		}, function(html){
-			$('#modal-content-loader').html(html);
+$(document).on('click', '.js-show-modal1', function (e) {
+    e.preventDefault();
+    var id = $(this).data('id');
 
-			// Khởi tạo select2 trong modal
-			$('.js-select2-modal').each(function(){
-				$(this).select2({
-					minimumResultsForSearch: 20,
-					dropdownParent: $(this).next('.dropDownSelect2')
-				});
-			});
+    $.post('index.php', {          // 🔁 đổi từ product.php -> index.php
+        quick_view_ajax: 1,
+        ma_sp: id
+    }, function (html) {
+        $('#modal-content-loader').html(html);
 
-			$('.js-modal1').addClass('show-modal1');
+        $('.js-modal1').addClass('show-modal1');
 
-			// Khởi tạo slick3 trong modal (cho gallery ảnh)
-			$('.wrap-slick3').each(function(){
-				$(this).find('.slick3').slick('unslick'); // nếu đã có, destroy
-				$(this).find('.slick3').slick({
-					slidesToShow: 1,
-					slidesToScroll: 1,
-					fade: false,
-					dots: true,
-					appendDots: $(this).find('.wrap-slick3-dots'),
-					appendArrows: $(this).find('.wrap-slick3-arrows'),
-					infinite: true,
-					autoplay: false,
-				});
-			});
-		});
-	});
+        // Khởi tạo slick3 trong modal (cho gallery ảnh)
+        $('.wrap-slick3').each(function () {
+            var $slick = $(this).find('.slick3');
 
-	$('.js-hide-modal1').on('click', function(){
-		$('.js-modal1').removeClass('show-modal1');
-	});
+            if ($slick.hasClass('slick-initialized')) {
+                $slick.slick('unslick');
+            }
+
+            $slick.slick({
+                slidesToShow: 1,
+                slidesToScroll: 1,
+                fade: false,
+                dots: true,
+                appendDots: $(this).find('.wrap-slick3-dots'),
+                appendArrows: $(this).find('.wrap-slick3-arrows'),
+                infinite: true,
+                autoplay: false,
+            });
+        });
+    });
+});
+
+
+	// Đóng modal khi bấm X hoặc click overlay
+$(document).on('click', '.js-hide-modal1', function () {
+    $('.js-modal1').removeClass('show-modal1');
+});
+
 	
 	</script>
 
