@@ -40,7 +40,7 @@ $cartTotal = 0;
                     ?>
                         <li class="header-cart-item flex-w flex-t m-b-12" data-id="<?php echo $id; ?>">
                             <div class="header-cart-item-img">
-                                <img src="images/products/<?php echo $img; ?>" alt="IMG">
+                                <img src="images/<?php echo $img; ?>" alt="IMG">
                             </div>
 
                             <div class="header-cart-item-txt p-t-8">
