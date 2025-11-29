@@ -1002,45 +1002,45 @@ if (isset($_POST['lay_thong_tin_sp_ajax']) && isset($_POST['ma_sp'])) {
 
 			<script>
 				// QUICK VIEW AJAX
-				$(document).on('click', '.js-show-modal1', function (e) {
-					e.preventDefault();
-					var id = $(this).data('id');
-					$.post('product.php', {
-						lay_thong_tin_sp_ajax: 1,
-						ma_sp: id
-					}, function (html) {
-						$('#modal-content-loader').html(html);
+$(document).on('click', '.js-show-modal1', function (e) {
+    e.preventDefault();
+    var id = $(this).data('id');
 
-						// Khởi tạo select2 trong modal
-						$('.js-select2-modal').each(function () {
-							$(this).select2({
-								minimumResultsForSearch: 20,
-								dropdownParent: $(this).next('.dropDownSelect2')
-							});
-						});
+    $.post('index.php', {          // 🔁 đổi từ product.php -> index.php
+        quick_view_ajax: 1,
+        ma_sp: id
+    }, function (html) {
+        $('#modal-content-loader').html(html);
 
-						$('.js-modal1').addClass('show-modal1');
+        $('.js-modal1').addClass('show-modal1');
 
-						// Khởi tạo slick3 trong modal (cho gallery ảnh)
-						$('.wrap-slick3').each(function () {
-							$(this).find('.slick3').slick('unslick'); // nếu đã có, destroy
-							$(this).find('.slick3').slick({
-								slidesToShow: 1,
-								slidesToScroll: 1,
-								fade: false,
-								dots: true,
-								appendDots: $(this).find('.wrap-slick3-dots'),
-								appendArrows: $(this).find('.wrap-slick3-arrows'),
-								infinite: true,
-								autoplay: false,
-							});
-						});
-					});
-				});
+        // Khởi tạo slick3 trong modal (cho gallery ảnh)
+        $('.wrap-slick3').each(function () {
+            var $slick = $(this).find('.slick3');
 
-				$('.js-hide-modal1').on('click', function () {
-					$('.js-modal1').removeClass('show-modal1');
-				});
+            if ($slick.hasClass('slick-initialized')) {
+                $slick.slick('unslick');
+            }
+
+            $slick.slick({
+                slidesToShow: 1,
+                slidesToScroll: 1,
+                fade: false,
+                dots: true,
+                appendDots: $(this).find('.wrap-slick3-dots'),
+                appendArrows: $(this).find('.wrap-slick3-arrows'),
+                infinite: true,
+                autoplay: false,
+            });
+        });
+    });
+});
+
+
+	// Đóng modal khi bấm X hoặc click overlay
+$(document).on('click', '.js-hide-modal1', function () {
+    $('.js-modal1').removeClass('show-modal1');
+});
 
 			</script>
 			<script>
