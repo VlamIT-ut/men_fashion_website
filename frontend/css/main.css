@@ -3703,3 +3703,257 @@ input.num-product::-webkit-inner-spin-button {
   text-decoration: none;
 }
 /*===============*/
+
+/*==========================================================================
+  CUSTOM PREMIUM OVERRIDES BY ANTIGRAVITY
+==========================================================================*/
+
+/* Global Typography */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+body, h1, h2, h3, h4, h5, h6, a, span, button, input {
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif !important;
+}
+
+/* Topbar Optimization */
+.top-bar {
+    background-color: #0f172a !important; /* Premium Slate 900 */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+.left-top-bar {
+    color: #94a3b8 !important; /* Slate 400 */
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+.right-top-bar a {
+    color: #94a3b8 !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+.right-top-bar a:hover {
+    color: #38bdf8 !important; /* Light sky blue */
+}
+
+/* Glassmorphism Header */
+.wrap-menu-desktop {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4) !important;
+    transition: all 0.3s ease !important;
+}
+.logo img {
+    max-height: 48px !important;
+    transition: transform 0.3s ease !important;
+}
+.logo:hover img {
+    transform: scale(1.05) !important;
+}
+
+/* Main Menu Underline Animation */
+.main-menu > li {
+    position: relative !important;
+}
+.main-menu > li > a {
+    font-weight: 600 !important;
+    color: #334155 !important; /* Slate 700 */
+    font-size: 14px !important;
+}
+.main-menu > li > a::after {
+    content: '' !important;
+    position: absolute !important;
+    width: 0 !important;
+    height: 2px !important;
+    bottom: -6px !important;
+    left: 50% !important;
+    background-color: #6366f1 !important; /* Indigo 500 */
+    transition: all 0.3s ease-in-out !important;
+    transform: translateX(-50%) !important;
+}
+.main-menu > li:hover > a::after,
+.main-menu > li.active-menu > a::after {
+    width: 60% !important;
+}
+.main-menu > li.active-menu > a {
+    color: #6366f1 !important;
+}
+
+/* Label1 "HOT" Pill Badge */
+.label1::after {
+    background-color: #f43f5e !important; /* Rose 500 */
+    color: #fff !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    border-radius: 999px !important;
+    padding: 2px 6px !important;
+    top: -12px !important;
+    right: -8px !important;
+    box-shadow: 0 4px 6px -1px rgba(244, 63, 94, 0.3) !important;
+}
+
+/* Header Notification Badges */
+.icon-header-noti::after {
+    background-color: #6366f1 !important; /* Indigo 500 */
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    border-radius: 999px !important;
+    padding: 1px 5px !important;
+    top: -2px !important;
+    right: -2px !important;
+    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4) !important;
+}
+
+/* User Profile Dropdown Styling */
+.header-user-dropdown {
+    position: relative !important;
+}
+.user-trigger {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    padding: 4px 10px !important;
+    border-radius: 999px !important;
+    transition: all 0.2s !important;
+}
+.user-trigger:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+.user-avatar {
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #f43f5e, #6366f1) !important;
+    color: #fff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3) !important;
+}
+.user-info {
+    display: flex !important;
+    flex-direction: column !important;
+    line-height: 1.2 !important;
+    text-align: left !important;
+}
+.user-name {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #cbd5e1 !important;
+}
+.user-role {
+    font-size: 9px !important;
+    color: #94a3b8 !important;
+}
+.user-chevron {
+    color: #94a3b8 !important;
+    font-size: 11px !important;
+}
+.user-menu {
+    position: absolute !important;
+    top: calc(100% + 8px) !important;
+    right: 0 !important;
+    background: #fff !important;
+    border-radius: 14px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    padding: 8px !important;
+    min-width: 170px !important;
+    display: none !important;
+    flex-direction: column !important;
+    z-index: 9999 !important;
+    border: 1px solid #e2e8f0 !important;
+    animation: slideDown 0.2s ease-out !important;
+}
+.header-user-dropdown:hover .user-menu {
+    display: flex !important;
+}
+.user-menu-item {
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    color: #475569 !important;
+    text-decoration: none !important;
+    transition: all 0.2s !important;
+    display: block !important;
+    text-align: left !important;
+}
+.user-menu-item:hover {
+    background-color: #f1f5f9 !important;
+    color: #6366f1 !important;
+}
+.user-logout:hover {
+    background-color: #fee2e2 !important;
+    color: #ef4444 !important;
+}
+
+/* Premium Explore Button (bg1) */
+.bg1 {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+    border: none !important;
+    box-shadow: 0 10px 20px -3px rgba(99, 102, 241, 0.4) !important;
+    border-radius: 999px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.bg1:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 24px -3px rgba(99, 102, 241, 0.5) !important;
+}
+.bg1:active {
+    transform: translateY(1px) !important;
+}
+
+/* Product Cards (block2) Beautification */
+.block2 {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease-in-out !important;
+    background: #fff !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02) !important;
+}
+.block2:hover {
+    box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.05) !important;
+}
+.block2-pic {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+.block2-pic img {
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.block2:hover .block2-pic img {
+    transform: scale(1.06) !important;
+}
+.block2-btn {
+    border-radius: 999px !important;
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    color: #1e293b !important;
+    font-weight: 600 !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.2s !important;
+}
+.block2-btn:hover {
+    background-color: #6366f1 !important;
+    color: #fff !important;
+    box-shadow: 0 10px 20px -3px rgba(99, 102, 241, 0.4) !important;
+}
+
+/* CSS Keyframes */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
