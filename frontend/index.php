@@ -175,7 +175,7 @@ if (isset($_POST['quick_view_ajax']) && isset($_POST['ma_sp'])) {
 <body class="animsition">
 
 	<!-- Header -->
-	<header>
+	<header class="<?php echo (isset($_GET['page']) && (int)$_GET['page'] > 1) ? 'header-v4' : ''; ?>">
 		<!-- Header desktop -->
 		<div class="container-menu-desktop">
 			<!-- Topbar -->
