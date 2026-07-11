@@ -595,6 +595,19 @@ if (isset($_POST['lay_thong_tin_sp_ajax']) && isset($_POST['ma_sp'])) {
 										Bộ lọc
 									</div>
 
+									<?php if ($sort !== 'default' || $price_from !== null || $price_to !== null || $color !== null): ?>
+										<?php
+										$paramsClear = $_GET;
+										unset($paramsClear['sort'], $paramsClear['price_from'], $paramsClear['price_to'], $paramsClear['color'], $paramsClear['page']);
+										$urlClear = '?' . http_build_query($paramsClear);
+										?>
+										<a href="<?php echo $urlClear; ?>"
+											class="flex-c-m stext-106 cl6 size-104 bor4 pointer hov-btn3 trans-04 m-r-8 m-tb-4 text-danger font-weight-bold">
+											<i class="zmdi zmdi-close m-r-6"></i>
+											Bỏ lọc
+										</a>
+									<?php endif; ?>
+
 									<div
 										class="flex-c-m stext-106 cl6 size-105 bor4 pointer hov-btn3 trans-04 m-tb-4 js-show-search">
 										<i class="icon-search cl2 m-r-6 fs-15 trans-04 zmdi zmdi-search"></i>
@@ -636,12 +649,17 @@ if (isset($_POST['lay_thong_tin_sp_ajax']) && isset($_POST['ma_sp'])) {
 												];
 												foreach ($filters as $key => $label) {
 													$active = ($sort == $key) ? 'filter-link-active' : '';
-													// giữ lại category / price / color khi đổi sort
 													$params = $_GET;
-													$params['sort'] = $key;
+													unset($params['page']); // RESET PAGE
+													if ($sort == $key) {
+														unset($params['sort']);
+													} else {
+														$params['sort'] = $key;
+													}
 													$url = '?' . http_build_query($params);
+													$activeIcon = ($sort == $key) ? ' <i class="zmdi zmdi-close-circle-o m-l-4 text-danger"></i>' : '';
 													echo '<li class="p-b-6">
-										<a href="' . $url . '" class="filter-link stext-106 trans-04 ' . $active . '">' . $label . '</a>
+										<a href="' . $url . '" class="filter-link stext-106 trans-04 ' . $active . '">' . $label . $activeIcon . '</a>
 									</li>';
 												}
 												?>
@@ -661,7 +679,7 @@ if (isset($_POST['lay_thong_tin_sp_ajax']) && isset($_POST['ma_sp'])) {
 												
 												// Tất cả
 												$paramsAll = $_GET;
-												unset($paramsAll['price_from'], $paramsAll['price_to']);
+												unset($paramsAll['price_from'], $paramsAll['price_to'], $paramsAll['page']);
 												$urlAll = '?' . http_build_query($paramsAll);
 												$activeAll = (!$price_from && !$price_to) ? 'filter-link-active' : '';
 												echo '<li class="p-b-6"><a href="' . $urlAll . '" class="filter-link stext-106 trans-04 ' . $activeAll . '">Tất cả</a></li>';
@@ -672,23 +690,30 @@ if (isset($_POST['lay_thong_tin_sp_ajax']) && isset($_POST['ma_sp'])) {
 														$to = null;
 
 													$paramsPrice = $_GET;
-													$paramsPrice['price_from'] = $from;
-													if ($to)
-														$paramsPrice['price_to'] = $to;
-													else
-														unset($paramsPrice['price_to']);
+													unset($paramsPrice['page']); // RESET PAGE
+													
+													$isActive = ($price_from === $from && (($price_to === $to) || ($to === null && !$price_to)));
+													if ($isActive) {
+														unset($paramsPrice['price_from'], $paramsPrice['price_to']);
+													} else {
+														$paramsPrice['price_from'] = $from;
+														if ($to)
+															$paramsPrice['price_to'] = $to;
+														else
+															unset($paramsPrice['price_to']);
+													}
 													$urlP = '?' . http_build_query($paramsPrice);
 
-													$isActive = ($price_from === $from && (($price_to === $to) || ($to === null && !$price_to)))
-														? 'filter-link-active' : '';
+													$activeClass = $isActive ? 'filter-link-active' : '';
+													$activeIcon = $isActive ? ' <i class="zmdi zmdi-close-circle-o m-l-4 text-danger"></i>' : '';
 
-													echo '<li class="p-b-6"><a href="' . $urlP . '" class="filter-link stext-106 trans-04 ' . $isActive . '">';
+													echo '<li class="p-b-6"><a href="' . $urlP . '" class="filter-link stext-106 trans-04 ' . $activeClass . '">';
 													if ($to) {
 														echo number_format($from) . "₫ - " . number_format($to) . "₫";
 													} else {
 														echo "Trên " . number_format($from) . "₫";
 													}
-													echo '</a></li>';
+													echo $activeIcon . '</a></li>';
 												}
 												?>
 											</ul>
@@ -700,15 +725,24 @@ if (isset($_POST['lay_thong_tin_sp_ajax']) && isset($_POST['ma_sp'])) {
 											<ul>
 												<?php foreach ($colors as $c):
 													$paramsColor = $_GET;
-													$paramsColor['color'] = $c;
+													unset($paramsColor['page']); // RESET PAGE
+													
+													$isActiveC = ($color === $c);
+													if ($isActiveC) {
+														unset($paramsColor['color']);
+													} else {
+														$paramsColor['color'] = $c;
+													}
 													$urlC = '?' . http_build_query($paramsColor);
-													$activeC = ($color === $c) ? 'filter-link-active' : '';
+													$activeC = $isActiveC ? 'filter-link-active' : '';
+													$activeIcon = $isActiveC ? ' <i class="zmdi zmdi-close-circle-o m-l-4 text-danger"></i>' : '';
 													?>
 													<li class="p-b-6">
 														<a href="<?php echo $urlC; ?>"
 															class="filter-link color-filter-link stext-106 trans-04 d-inline-flex align-items-center gap-2 <?php echo $activeC; ?>">
 															<span class="color-dot" style="background-color: <?php echo getColorHex($c); ?>; <?php echo (mb_strtolower(trim($c), 'UTF-8') == 'trắng') ? 'border: 1px solid #cbd5e1;' : ''; ?>"></span>
 															<span><?php echo htmlspecialchars($c); ?></span>
+															<?php echo $activeIcon; ?>
 														</a>
 													</li>
 												<?php endforeach; ?>
