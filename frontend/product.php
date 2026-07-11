@@ -19,6 +19,27 @@ function getDisplayName($sessionValue, $default = 'Tài khoản')
 	return $default;
 }
 
+// Hàm lấy mã màu CSS từ tên tiếng Việt
+function getColorHex($colorName)
+{
+	$colorName = mb_strtolower(trim($colorName), 'UTF-8');
+	switch ($colorName) {
+		case 'đen': return '#1e293b';
+		case 'trắng': return '#ffffff';
+		case 'đỏ': return '#ef4444';
+		case 'xanh': return '#2563eb';
+		case 'xanh dương': return '#2563eb';
+		case 'xanh lá': return '#22c55e';
+		case 'xám': return '#64748b';
+		case 'vàng': return '#eab308';
+		case 'hồng': return '#ec4899';
+		case 'cam': return '#ff7849';
+		case 'nâu': return '#78350f';
+		case 'tím': return '#a855f7';
+		default: return '#cbd5e1';
+	}
+}
+
 // ================== PHẦN 1: XỬ LÝ AJAX QUICK VIEW (QUAN TRỌNG) ==================
 // Nếu có request AJAX gửi lên, code sẽ chạy vào đây, trả về HTML rồi DỪNG LUÔN (exit)
 if (isset($_POST['lay_thong_tin_sp_ajax']) && isset($_POST['ma_sp'])) {
@@ -685,8 +706,9 @@ if (isset($_POST['lay_thong_tin_sp_ajax']) && isset($_POST['ma_sp'])) {
 													?>
 													<li class="p-b-6">
 														<a href="<?php echo $urlC; ?>"
-															class="filter-link stext-106 trans-04 <?php echo $activeC; ?>">
-															<?php echo htmlspecialchars($c); ?>
+															class="filter-link color-filter-link stext-106 trans-04 d-inline-flex align-items-center gap-2 <?php echo $activeC; ?>">
+															<span class="color-dot" style="background-color: <?php echo getColorHex($c); ?>; <?php echo (mb_strtolower(trim($c), 'UTF-8') == 'trắng') ? 'border: 1px solid #cbd5e1;' : ''; ?>"></span>
+															<span><?php echo htmlspecialchars($c); ?></span>
 														</a>
 													</li>
 												<?php endforeach; ?>
