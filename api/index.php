@@ -8,12 +8,28 @@ if ($uri === '/' || $uri === '') {
 }
 
 // Determine the target file path
-if (strpos($uri, '/admin/') === 0) {
-    $file = dirname(__DIR__) . '/frontend/admin/' . basename($uri);
-} elseif (strpos($uri, '/payment/') === 0) {
-    $file = dirname(__DIR__) . '/frontend/payment/' . basename($uri);
+if (strpos($uri, '/admin/') === 0 || $uri === '/admin') {
+    $filename = basename($uri);
+    // If the path is just /admin or /admin/ or doesn't end in .php, default to index.php
+    if ($uri === '/admin' || $uri === '/admin/' || strpos($filename, '.php') === false) {
+        $filename = 'index.php';
+        $uri = '/admin/index.php';
+    }
+    $file = dirname(__DIR__) . '/frontend/admin/' . $filename;
+} elseif (strpos($uri, '/payment/') === 0 || $uri === '/payment') {
+    $filename = basename($uri);
+    if ($uri === '/payment' || $uri === '/payment/' || strpos($filename, '.php') === false) {
+        $filename = 'index.php';
+        $uri = '/payment/index.php';
+    }
+    $file = dirname(__DIR__) . '/frontend/payment/' . $filename;
 } else {
-    $file = dirname(__DIR__) . '/frontend/' . basename($uri);
+    $filename = basename($uri);
+    if (strpos($filename, '.php') === false) {
+        $filename = 'index.php';
+        $uri = '/index.php';
+    }
+    $file = dirname(__DIR__) . '/frontend/' . $filename;
 }
 
 if (file_exists($file)) {
