@@ -482,6 +482,7 @@ if (isset($_POST['quick_view_ajax']) && isset($_POST['ma_sp'])) {
 
 
 	<!-- Slider -->
+	<?php if (!isset($_GET['page']) || (int)$_GET['page'] <= 1): ?>
 	<section class="section-slide">
 		<div class="wrap-slick1">
 			<div class="slick1">
@@ -526,6 +527,7 @@ if (isset($_POST['quick_view_ajax']) && isset($_POST['ma_sp'])) {
 			</div>
 		</div>
 	</section>
+	<?php endif; ?>
 
 	<!-- ====== LIST SẢN PHẨM MỚI ====== -->
 	<?php
