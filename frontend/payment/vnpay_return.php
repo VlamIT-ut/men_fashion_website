@@ -37,7 +37,19 @@ if ($secureHash == $vnp_SecureHash) {
         $message = "Cảm ơn bạn đã thanh toán. Đơn hàng của bạn đang được xử lý.";
         $icon = "✅";
         $cssClass = "success";
-        // TODO: Cập nhật database tại đây (nếu chưa dùng IPN)
+        
+        // Cập nhật trạng thái thanh toán trong đơn hàng
+        $orderId = (int)$_GET['vnp_TxnRef']; // chính là ma_dh đã gửi sang
+
+        $sql = "UPDATE don_hang
+                SET trangthai_thanhtoan = 1,
+                    ma_pt = 2      -- 2 = VNPAY (nếu bạn dùng mã này)
+                WHERE ma_dh = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "i", $orderId);
+            mysqli_stmt_execute($stmt);
+        }
     } else {
         // THẤT BẠI (Do hủy, không đủ tiền, lỗi bank...)
         $status = "Giao dịch thất bại";
@@ -51,18 +63,7 @@ if ($secureHash == $vnp_SecureHash) {
     $message = "Chữ ký không hợp lệ! Vui lòng kiểm tra lại.";
     $icon = "⚠️";
     $cssClass = "warning";
-}
-
- // Cập nhật trạng thái thanh toán trong đơn hàng
-        $orderId = (int)$_GET['vnp_TxnRef']; // chính là ma_dh đã gửi sang
-
-        $sql = "UPDATE don_hang
-                SET trangthai_thanhtoan = 1,
-                    ma_pt = 2      -- 2 = VNPAY (nếu bạn dùng mã này)
-                WHERE ma_dh = ?";
-        $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "i", $orderId);
-        mysqli_stmt_execute($stmt); 
+} 
         
 // Format lại tiền tệ và ngày tháng cho đẹp
 $amount = number_format($_GET['vnp_Amount'] / 100) . " VNĐ";

@@ -1,5 +1,10 @@
 <?php
 session_start();
+if (!isset($_SESSION['admin'])) {
+    header("Location: login_admin.php");
+    exit;
+}
+
 include "../db.php";
 
 $success = "";
@@ -18,32 +23,60 @@ if (isset($_POST["btnAdd"])) {
     if ($ten_sp == "" || $gia == "" || $loai == "") {
         $error = "Vui lòng nhập đầy đủ thông tin!";
     } else {
-        // Thêm vào bảng sản phẩm
-        $sql = "INSERT INTO san_pham (ten_sp, gia, ma_loaisp, ton_tai) VALUES (?, ?, ?, 1)";
-        $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "sii", $ten_sp, $gia, $loai);
-        mysqli_stmt_execute($stmt);
+        // Validate file extensions first
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $validUploads = true;
 
-        $ma_sp = mysqli_insert_id($conn); // Lấy mã sản phẩm vừa thêm
-
-        // UPLOAD HÌNH ẢNH
         if (!empty($_FILES['hinhanh']['name'][0])) {
             $files = $_FILES['hinhanh'];
-
             for ($i = 0; $i < count($files['name']); $i++) {
-                $name = time() . "_" . basename($files['name'][$i]);
-                $path = "../frontend/images/" . $name;
-
-                if (move_uploaded_file($files['tmp_name'][$i], $path)) {
-                    $sqlImg = "INSERT INTO hinhanh_sp (ma_sp, ten_anh) VALUES (?, ?)";
-                    $stmtImg = mysqli_prepare($conn, $sqlImg);
-                    mysqli_stmt_bind_param($stmtImg, "is", $ma_sp, $name);
-                    mysqli_stmt_execute($stmtImg);
+                if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
+                    if (!in_array($ext, $allowedExtensions)) {
+                        $validUploads = false;
+                        $error = "File '" . htmlspecialchars($files['name'][$i]) . "' không đúng định dạng ảnh cho phép (" . implode(', ', $allowedExtensions) . ").";
+                        break;
+                    }
                 }
             }
         }
 
-        $success = "Thêm sản phẩm thành công!";
+        if ($validUploads) {
+            // Thêm vào bảng sản phẩm
+            $sql = "INSERT INTO san_pham (ten_sp, gia, ma_loaisp, ton_tai) VALUES (?, ?, ?, 1)";
+            $stmt = mysqli_prepare($conn, $sql);
+            if ($stmt) {
+                mysqli_stmt_bind_param($stmt, "sii", $ten_sp, $gia, $loai);
+                mysqli_stmt_execute($stmt);
+                $ma_sp = mysqli_insert_id($conn); // Lấy mã sản phẩm vừa thêm
+
+                // UPLOAD HÌNH ẢNH
+                if (!empty($_FILES['hinhanh']['name'][0])) {
+                    $files = $_FILES['hinhanh'];
+
+                    for ($i = 0; $i < count($files['name']); $i++) {
+                        if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                            $ext = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
+                            $name = time() . "_" . md5(uniqid()) . "." . $ext;
+                            $path = "../frontend/images/" . $name;
+
+                            if (move_uploaded_file($files['tmp_name'][$i], $path)) {
+                                $sqlImg = "INSERT INTO hinhanh_sp (ma_sp, ten_anh) VALUES (?, ?)";
+                                $stmtImg = mysqli_prepare($conn, $sqlImg);
+                                if ($stmtImg) {
+                                    mysqli_stmt_bind_param($stmtImg, "is", $ma_sp, $name);
+                                    mysqli_stmt_execute($stmtImg);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                $success = "Thêm sản phẩm thành công!";
+            } else {
+                $error = "Lỗi chuẩn bị truy vấn thêm sản phẩm.";
+            }
+        }
     }
 }
 ?>

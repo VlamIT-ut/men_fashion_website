@@ -8,15 +8,38 @@ $perPage = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 
-// Tính vị trí bắt đầu
-$offset = ($page - 1) * $perPage;
+// Lấy bộ lọc từ GET
+$q = isset($_GET['q']) ? trim($_GET['q']) : '';
+$status = isset($_GET['status']) && $_GET['status'] !== '' ? (int)$_GET['status'] : null;
+
+$whereParts = [];
+if ($q !== '') {
+    $qEsc = mysqli_real_escape_string($conn, $q);
+    $whereParts[] = "(ho_ten LIKE '%$qEsc%' OR email LIKE '%$qEsc%' OR sdt LIKE '%$qEsc%')";
+}
+if ($status !== null) {
+    $whereParts[] = "trang_thai = $status";
+}
+
+$whereSQL = "";
+if (count($whereParts) > 0) {
+    $whereSQL = " WHERE " . implode(" AND ", $whereParts);
+}
 
 // Đếm tổng số user để tính số trang
-$sqlCount   = "SELECT COUNT(*) AS total FROM khach_hang";
+$sqlCount   = "SELECT COUNT(*) AS total FROM khach_hang" . $whereSQL;
 $rsCount    = mysqli_query($conn, $sqlCount);
 $rowCount   = mysqli_fetch_assoc($rsCount);
 $totalUsers = (int)$rowCount['total'];
 $totalPages = ($totalUsers > 0) ? ceil($totalUsers / $perPage) : 1;
+
+if ($page > $totalPages) $page = $totalPages;
+if ($page < 1) $page = 1;
+
+// Tính vị trí bắt đầu
+$offset = ($page - 1) * $perPage;
+if ($offset < 0) $offset = 0;
+
 $sql = "
     SELECT 
         ma_kh AS id,
@@ -25,9 +48,20 @@ $sql = "
         sdt   AS dien_thoai,
         trang_thai
     FROM khach_hang
+    $whereSQL
     ORDER BY ma_kh DESC
+    LIMIT $offset, $perPage
 ";
 $rsUsers = mysqli_query($conn, $sql);
+
+// Build filter query string for pagination
+$filterParams = "";
+if ($q !== '') {
+    $filterParams .= "&q=" . urlencode($q);
+}
+if ($status !== null) {
+    $filterParams .= "&status=" . $status;
+}
 ?>
 
 
@@ -115,14 +149,14 @@ $rsUsers = mysqli_query($conn, $sql);
                 <!-- Nút trang trước -->
                 <?php if ($page > 1): ?>
                     <li class="page-item">
-                        <a class="page-link" href="?page=<?php echo $page - 1; ?>">&laquo;</a>
+                        <a class="page-link" href="?page=<?php echo $page - 1; ?><?php echo $filterParams; ?>">&laquo;</a>
                     </li>
                 <?php endif; ?>
 
                 <!-- Các số trang -->
                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                     <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
-                        <a class="page-link" href="?page=<?php echo $i; ?>">
+                        <a class="page-link" href="?page=<?php echo $i; ?><?php echo $filterParams; ?>">
                             <?php echo $i; ?>
                         </a>
                     </li>
@@ -131,7 +165,7 @@ $rsUsers = mysqli_query($conn, $sql);
                 <!-- Nút trang sau -->
                 <?php if ($page < $totalPages): ?>
                     <li class="page-item">
-                        <a class="page-link" href="?page=<?php echo $page + 1; ?>">&raquo;</a>
+                        <a class="page-link" href="?page=<?php echo $page + 1; ?><?php echo $filterParams; ?>">&raquo;</a>
                     </li>
                 <?php endif; ?>
             </ul>

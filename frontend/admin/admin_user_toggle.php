@@ -5,8 +5,10 @@ session_start();
 include __DIR__ . '/../db.php';
         // hoặc include 'admin_header.php' nếu trong đó có sẵn $conn + check admin
 
-// NÊN có kiểm tra quyền admin ở đây
-// if (empty($_SESSION['admin'])) { header("Location: admin_login.php"); exit; }
+if (empty($_SESSION['admin'])) {
+    header("Location: login_admin.php");
+    exit;
+}
 
 if (!isset($_GET['id'], $_GET['action'])) {
     header("Location: users.php");

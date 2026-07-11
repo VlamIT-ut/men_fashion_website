@@ -34,8 +34,31 @@ if (isset($_GET['toggle'])) {
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
 
-    mysqli_query($conn, "DELETE FROM hinhanh_sp WHERE ma_sp = $id");
-    mysqli_query($conn, "DELETE FROM san_pham WHERE ma_sp = $id");
+    // Lấy và xóa ảnh từ disk
+    $stmtOld = mysqli_prepare($conn, "SELECT ten_anh FROM hinhanh_sp WHERE ma_sp = ?");
+    if ($stmtOld) {
+        mysqli_stmt_bind_param($stmtOld, "i", $id);
+        mysqli_stmt_execute($stmtOld);
+        $rsOld = mysqli_stmt_get_result($stmtOld);
+        while ($old = mysqli_fetch_assoc($rsOld)) {
+            $oldPath = "../images/products/" . $old['ten_anh'];
+            if (file_exists($oldPath)) {
+                @unlink($oldPath);
+            }
+        }
+    }
+
+    $stmtDelImg = mysqli_prepare($conn, "DELETE FROM hinhanh_sp WHERE ma_sp = ?");
+    if ($stmtDelImg) {
+        mysqli_stmt_bind_param($stmtDelImg, "i", $id);
+        mysqli_stmt_execute($stmtDelImg);
+    }
+
+    $stmtDelProduct = mysqli_prepare($conn, "DELETE FROM san_pham WHERE ma_sp = ?");
+    if ($stmtDelProduct) {
+        mysqli_stmt_bind_param($stmtDelProduct, "i", $id);
+        mysqli_stmt_execute($stmtDelProduct);
+    }
 
     $thongBao = "Đã xóa sản phẩm mã $id";
 }
@@ -43,12 +66,17 @@ if (isset($_GET['delete'])) {
 // ===================== LẤY DỮ LIỆU ĐỂ SỬA (NẾU CÓ edit=) =====================
 if (isset($_GET['edit'])) {
     $editId = (int)$_GET['edit'];
-    $sqlOne = "SELECT * FROM san_pham WHERE ma_sp = $editId";
-    $rsOne  = mysqli_query($conn, $sqlOne);
-    if ($rsOne && mysqli_num_rows($rsOne) > 0) {
-        $editProduct = mysqli_fetch_assoc($rsOne);
-    } else {
-        $editId = 0;
+    $sqlOne = "SELECT * FROM san_pham WHERE ma_sp = ?";
+    $stmtOne = mysqli_prepare($conn, $sqlOne);
+    if ($stmtOne) {
+        mysqli_stmt_bind_param($stmtOne, "i", $editId);
+        mysqli_stmt_execute($stmtOne);
+        $rsOne = mysqli_stmt_get_result($stmtOne);
+        if ($rsOne && mysqli_num_rows($rsOne) > 0) {
+            $editProduct = mysqli_fetch_assoc($rsOne);
+        } else {
+            $editId = 0;
+        }
     }
 }
 
@@ -64,37 +92,60 @@ if (isset($_POST['saveProduct'])) {
     if ($ten == "" || $gia <= 0 || $ma_loaisp <= 0) {
         $thongBao = "Tên, giá và loại sản phẩm không được trống!";
     } else {
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $validUploads = true;
 
-        $sql = "INSERT INTO san_pham (ma_loaisp, ten_sp, gia, mota, so_luong, ton_tai)
-                VALUES (?, ?, ?, ?, ?, b'1')";
-        $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "isdsi",
-            $ma_loaisp, $ten, $gia, $mota, $so_luong
-        );
-        mysqli_stmt_execute($stmt);
-
-        $ma_sp = mysqli_insert_id($conn);
-
-        // UPLOAD HÌNH
         if (!empty($_FILES['hinh']['name'][0])) {
             foreach ($_FILES['hinh']['name'] as $i => $filename) {
                 if ($_FILES['hinh']['error'][$i] == 0) {
-                    $tmp      = $_FILES['hinh']['tmp_name'][$i];
-                    $fileName = basename($filename);
-                    $savePath = "../images/products/" . $fileName;
-
-                    move_uploaded_file($tmp, $savePath);
-
-                    mysqli_query($conn,
-                        "INSERT INTO hinhanh_sp (ma_sp, ten_anh)
-                         VALUES ($ma_sp, '" . mysqli_real_escape_string($conn, $fileName) . "')"
-                    );
+                    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                    if (!in_array($ext, $allowedExtensions)) {
+                        $validUploads = false;
+                        $thongBao = "File '" . htmlspecialchars($filename) . "' không hợp lệ. Chỉ chấp nhận các định dạng ảnh: " . implode(', ', $allowedExtensions);
+                        break;
+                    }
                 }
             }
         }
 
-        header("Location: products.php");
-        exit;
+        if ($validUploads) {
+            $sql = "INSERT INTO san_pham (ma_loaisp, ten_sp, gia, mota, so_luong, ton_tai)
+                    VALUES (?, ?, ?, ?, ?, b'1')";
+            $stmt = mysqli_prepare($conn, $sql);
+            if ($stmt) {
+                mysqli_stmt_bind_param($stmt, "isdsi",
+                    $ma_loaisp, $ten, $gia, $mota, $so_luong
+                );
+                mysqli_stmt_execute($stmt);
+                $ma_sp = mysqli_insert_id($conn);
+
+                // UPLOAD HÌNH
+                if (!empty($_FILES['hinh']['name'][0])) {
+                    foreach ($_FILES['hinh']['name'] as $i => $filename) {
+                        if ($_FILES['hinh']['error'][$i] == 0) {
+                            $tmp      = $_FILES['hinh']['tmp_name'][$i];
+                            $ext      = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                            $fileName = time() . "_" . md5(uniqid()) . "." . $ext;
+                            $savePath = "../images/products/" . $fileName;
+
+                            if (move_uploaded_file($tmp, $savePath)) {
+                                $sqlImg = "INSERT INTO hinhanh_sp (ma_sp, ten_anh) VALUES (?, ?)";
+                                $stmtImg = mysqli_prepare($conn, $sqlImg);
+                                if ($stmtImg) {
+                                    mysqli_stmt_bind_param($stmtImg, "is", $ma_sp, $fileName);
+                                    mysqli_stmt_execute($stmtImg);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                header("Location: products.php");
+                exit;
+            } else {
+                $thongBao = "Lỗi khi lưu sản phẩm.";
+            }
+        }
     }
 }
 
@@ -111,50 +162,81 @@ if (isset($_POST['updateProduct'])) {
     if ($ma_sp <= 0 || $ten == "" || $gia <= 0 || $ma_loaisp <= 0) {
         $thongBao = "Thiếu thông tin khi cập nhật!";
     } else {
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $validUploads = true;
 
-        $sql = "UPDATE san_pham 
-                SET ma_loaisp = ?, ten_sp = ?, gia = ?, mota = ?, so_luong = ?
-                WHERE ma_sp = ?";
-        $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "isdsii",
-            $ma_loaisp, $ten, $gia, $mota, $so_luong, $ma_sp
-        );
-        mysqli_stmt_execute($stmt);
-
-       // Nếu có upload ảnh mới => XÓA ảnh cũ + CHỈ LƯU ảnh mới
         if (!empty($_FILES['hinh']['name'][0])) {
-
-            // 1. Lấy danh sách ảnh cũ để xóa file trong thư mục (nếu muốn)
-            $rsOld = mysqli_query($conn, "SELECT ten_anh FROM hinhanh_sp WHERE ma_sp = $ma_sp");
-            while ($old = mysqli_fetch_assoc($rsOld)) {
-                $oldPath = "../images/products/" . $old['ten_anh'];
-                if (file_exists($oldPath)) {
-                    @unlink($oldPath); // xóa file ảnh cũ
-                }
-            }
-
-            // 2. Xóa bản ghi ảnh cũ trong DB
-            mysqli_query($conn, "DELETE FROM hinhanh_sp WHERE ma_sp = $ma_sp");
-
-            // 3. Thêm các ảnh mới
             foreach ($_FILES['hinh']['name'] as $i => $filename) {
                 if ($_FILES['hinh']['error'][$i] == 0) {
-                    $tmp      = $_FILES['hinh']['tmp_name'][$i];
-                    $fileName = basename($filename);
-                    $savePath = "../images/products/" . $fileName;
-
-                    move_uploaded_file($tmp, $savePath);
-
-                    mysqli_query($conn,
-                        "INSERT INTO hinhanh_sp (ma_sp, ten_anh)
-                         VALUES ($ma_sp, '" . mysqli_real_escape_string($conn, $fileName) . "')"
-                    );
+                    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                    if (!in_array($ext, $allowedExtensions)) {
+                        $validUploads = false;
+                        $thongBao = "File '" . htmlspecialchars($filename) . "' không hợp lệ. Chỉ chấp nhận các định dạng ảnh: " . implode(', ', $allowedExtensions);
+                        break;
+                    }
                 }
             }
         }
 
-        header("Location: products.php");
-        exit;
+        if ($validUploads) {
+            $sql = "UPDATE san_pham 
+                    SET ma_loaisp = ?, ten_sp = ?, gia = ?, mota = ?, so_luong = ?
+                    WHERE ma_sp = ?";
+            $stmt = mysqli_prepare($conn, $sql);
+            if ($stmt) {
+                mysqli_stmt_bind_param($stmt, "isdsii",
+                    $ma_loaisp, $ten, $gia, $mota, $so_luong, $ma_sp
+                );
+                mysqli_stmt_execute($stmt);
+
+                // Nếu có upload ảnh mới => XÓA ảnh cũ + CHỈ LƯU ảnh mới
+                if (!empty($_FILES['hinh']['name'][0])) {
+                    // 1. Lấy danh sách ảnh cũ để xóa file trong thư mục
+                    $stmtOld = mysqli_prepare($conn, "SELECT ten_anh FROM hinhanh_sp WHERE ma_sp = ?");
+                    if ($stmtOld) {
+                        mysqli_stmt_bind_param($stmtOld, "i", $ma_sp);
+                        mysqli_stmt_execute($stmtOld);
+                        $rsOld = mysqli_stmt_get_result($stmtOld);
+                        while ($old = mysqli_fetch_assoc($rsOld)) {
+                            $oldPath = "../images/products/" . $old['ten_anh'];
+                            if (file_exists($oldPath)) {
+                                @unlink($oldPath);
+                            }
+                        }
+                    }
+
+                    // 2. Xóa bản ghi ảnh cũ trong DB
+                    $stmtDelOld = mysqli_prepare($conn, "DELETE FROM hinhanh_sp WHERE ma_sp = ?");
+                    if ($stmtDelOld) {
+                        mysqli_stmt_bind_param($stmtDelOld, "i", $ma_sp);
+                        mysqli_stmt_execute($stmtDelOld);
+                    }
+
+                    // 3. Thêm các ảnh mới
+                    foreach ($_FILES['hinh']['name'] as $i => $filename) {
+                        if ($_FILES['hinh']['error'][$i] == 0) {
+                            $tmp      = $_FILES['hinh']['tmp_name'][$i];
+                            $ext      = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                            $fileName = time() . "_" . md5(uniqid()) . "." . $ext;
+                            $savePath = "../images/products/" . $fileName;
+
+                            if (move_uploaded_file($tmp, $savePath)) {
+                                $stmtInsImg = mysqli_prepare($conn, "INSERT INTO hinhanh_sp (ma_sp, ten_anh) VALUES (?, ?)");
+                                if ($stmtInsImg) {
+                                    mysqli_stmt_bind_param($stmtInsImg, "is", $ma_sp, $fileName);
+                                    mysqli_stmt_execute($stmtInsImg);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                header("Location: products.php");
+                exit;
+            } else {
+                $thongBao = "Lỗi khi cập nhật sản phẩm.";
+            }
+        }
     }
 }
 

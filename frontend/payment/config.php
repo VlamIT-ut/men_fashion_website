@@ -4,10 +4,16 @@ date_default_timezone_set('Asia/Ho_Chi_Minh');
 /*
  * CẤU HÌNH VNPAY
  */
-$vnp_TmnCode = "AUJ1BE5J"; // Website ID (Thay bằng mã của bạn)
-$vnp_HashSecret = "P1PHAKP05ETBDMCA7B86FWGTNV3MDD98"; // Chuỗi bí mật (Thay bằng mã của bạn)
-$vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-$vnp_Returnurl = "http://localhost/men_fashion_website/frontend/payment/vnpay_return.php"; // URL nhận kết quả trả về
-$vnp_apiUrl = "http://sandbox.vnpayment.vn/merchant_webapi/merchant.html";
-$apiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
+$config_path = __DIR__ . '/../../config.global.php';
+if (!file_exists($config_path)) {
+    die("Thiếu file cấu hình hệ thống config.global.php");
+}
+$config = require $config_path;
+
+$vnp_TmnCode = $config['vnpay']['tmn_code'];
+$vnp_HashSecret = $config['vnpay']['hash_secret'];
+$vnp_Url = $config['vnpay']['url'];
+$vnp_Returnurl = $config['vnpay']['return_url'];
+$vnp_apiUrl = $config['vnpay']['api_url'];
+$apiUrl = $config['vnpay']['api_transaction_url'];
 ?>
