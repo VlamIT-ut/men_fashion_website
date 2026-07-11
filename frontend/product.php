@@ -40,7 +40,188 @@ function getColorHex($colorName)
 	}
 }
 
-// AJAX Quick View đã được chuyển sang ajax_quickview.php để tối ưu tốc độ và UI
+// ================== PHẦN 1: XỬ LÝ AJAX QUICK VIEW (QUAN TRỌNG) ==================
+// Nếu có request AJAX gửi lên, code sẽ chạy vào đây, trả về HTML rồi DỪNG LUÔN (exit)
+if (isset($_POST['lay_thong_tin_sp_ajax']) && isset($_POST['ma_sp'])) {
+
+	// Kiểm tra kết nối DB
+	if (!isset($conn)) {
+		echo "Lỗi kết nối CSDL";
+		exit;
+	}
+
+	$ma_sp = (int) $_POST['ma_sp'];
+
+	// 1. Lấy thông tin sản phẩm
+	$sql = "SELECT sp.*, MIN(img.ten_anh) as ten_anh 
+            FROM san_pham sp 
+            LEFT JOIN hinhanh_sp img ON sp.ma_sp = img.ma_sp 
+            WHERE sp.ma_sp = $ma_sp 
+            GROUP BY sp.ma_sp";
+
+	$rs = mysqli_query($conn, $sql);
+
+	if ($rs && mysqli_num_rows($rs) > 0) {
+		$p = mysqli_fetch_assoc($rs);
+
+		// 2. Lấy hình ảnh gallery
+		$sqlImg = "SELECT ten_anh FROM hinhanh_sp WHERE ma_sp = $ma_sp";
+		$rsImg = mysqli_query($conn, $sqlImg);
+		$images = [];
+		while ($row = mysqli_fetch_assoc($rsImg)) {
+			$images[] = $row['ten_anh'];
+		}
+		if (empty($images))
+			$images[] = $p['ten_anh'] ?? 'product-01.jpg'; // Fallback ảnh
+
+		// Lấy kích cỡ từ DB
+		$sizes = [];
+		$sql_size = "
+    SELECT kc.ten_kichco
+    FROM kich_co kc
+    JOIN kichco_sp ks ON kc.ma_kichco = ks.ma_kichco
+    WHERE ks.ma_sp = $ma_sp
+";
+		$rs_size = mysqli_query($conn, $sql_size);
+		if ($rs_size) {
+			while ($row = mysqli_fetch_assoc($rs_size)) {
+				$sizes[] = $row['ten_kichco'];
+			}
+		}
+
+		// Lấy màu sắc từ DB
+		$colors = [];
+		$sql_color = "
+    SELECT ms.ten_mau
+    FROM mau_sac ms
+    JOIN mau_sp msp ON ms.ma_mau = msp.ma_mau
+    WHERE msp.ma_sp = $ma_sp
+";
+		$rs_color = mysqli_query($conn, $sql_color);
+		if ($rs_color) {
+			while ($row = mysqli_fetch_assoc($rs_color)) {
+				$colors[] = $row['ten_mau'];
+			}
+		}
+		?>
+		<!-- Product Detail -->
+
+		<section class="sec-product-detail bg0 p-t-65 p-b-60">
+			<!-- ===== MODAL CŨ GIỮ UI ===== -->
+			<div class="wrap-modal1 js-modal1 p-t-60 p-b-20">
+				<div class="overlay-modal1 js-hide-modal1"></div>
+
+				<div class="container">
+					<div class="bg0 p-t-60 p-b-30 p-lr-15-lg how-pos3-parent">
+
+						<!-- Nút đóng modal -->
+						<button class="how-pos3 hov3 trans-04 js-hide-modal1">
+							<img src="images/icons/icon-close.png" alt="CLOSE">
+						</button>
+
+						<!-- ===== NỘI DUNG PRODUCT DETAIL MỚI ĐẶT VÀO ĐÂY ===== -->
+						<div class="row">
+							<div class="col-md-6 col-lg-7 p-b-30">
+								<div class="wrap-slick3 flex-sb flex-w">
+									<div class="wrap-slick3-dots"></div>
+									<div class="wrap-slick3-arrows flex-sb-m flex-w"></div>
+
+									<div class="slick3 gallery-lb">
+										<?php foreach ($images as $img): ?>
+											<div class="item-slick3" data-thumb="images/<?php echo htmlspecialchars($img); ?>">
+												<div class="wrap-pic-w pos-relative">
+													<img src="images/<?php echo htmlspecialchars($img); ?>" alt="IMG-PRODUCT">
+													<a class="flex-c-m size-108 how-pos1 bor0 fs-16 cl10 bg0 hov-btn3 trans-04"
+														href="images/<?php echo htmlspecialchars($img); ?>">
+														<i class="fa fa-expand"></i>
+													</a>
+												</div>
+											</div>
+										<?php endforeach; ?>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6 col-lg-5 p-b-30">
+								<h4 class="mtext-105 cl2 p-b-14"><?php echo htmlspecialchars($p['ten_sp']); ?></h4>
+
+								<span class="mtext-106 cl2">
+									<?php echo ($p['gia'] !== null) ? number_format($p['gia']) . "₫" : "Liên hệ"; ?>
+								</span>
+
+								<p class="stext-102 cl3 p-t-10">
+									<?php echo !empty($p['mota']) ? nl2br(htmlspecialchars($p['mota'])) : "Sản phẩm chưa có mô tả."; ?>
+								</p>
+
+								<div class="p-t-20 flex-w flex-r-m p-b-10">
+									<div class="size-203 flex-c-m respon6">Kích cỡ</div>
+									<div class="size-204 respon6-next">
+										<div class="rs1-select2 bor8 bg0">
+											<select class="js-select2-modal" name="size">
+												<option value="">Chọn kích cỡ</option>
+												<?php foreach ($sizes as $kc): ?>
+													<option><?php echo htmlspecialchars($kc); ?></option>
+												<?php endforeach; ?>
+											</select>
+											<div class="dropDownSelect2"></div>
+										</div>
+									</div>
+								</div>
+
+								<div class="flex-w flex-r-m p-b-10">
+									<div class="size-203 flex-c-m respon6">Màu sắc</div>
+									<div class="size-204 respon6-next">
+										<div class="rs1-select2 bor8 bg0">
+											<select class="js-select2-modal" name="color">
+												<option value="">Chọn màu sắc</option>
+												<?php foreach ($colors as $mau): ?>
+													<option><?php echo htmlspecialchars($mau); ?></option>
+												<?php endforeach; ?>
+											</select>
+											<div class="dropDownSelect2"></div>
+										</div>
+									</div>
+								</div>
+
+								<div class="flex-w flex-r-m p-t-10">
+									<div class="wrap-num-product flex-w m-r-20">
+										<div class="btn-num-product-down cl8 hov-btn3 trans-04 flex-c-m">
+											<i class="fs-16 zmdi zmdi-minus"></i>
+										</div>
+										<input class="mtext-104 cl3 txt-center num-product" type="number" name="num-product"
+											value="1">
+										<div class="btn-num-product-up cl8 hov-btn3 trans-04 flex-c-m">
+											<i class="fs-16 zmdi zmdi-plus"></i>
+										</div>
+									</div>
+
+									<button
+										class="flex-c-m stext-101 cl0 size-101 bg1 bor1 hov-btn1 p-lr-15 trans-04 js-addcart-detail"
+										data-id="<?php echo (int) $p['ma_sp']; ?>">
+										Thêm vào giỏ
+									</button>
+								</div>
+
+								<div class="flex-w flex-m p-l-100 p-t-40 respon7">
+									<div class="flex-m bor9 p-r-10 m-r-11">
+										<a href="#"
+											class="fs-14 cl3 hov-cl1 trans-04 lh-10 p-lr-5 p-tb-2 js-addwish-detail tooltip100"
+											data-tooltip="Add to Wishlist">
+											<i class="zmdi zmdi-favorite"></i>
+										</a>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<?php
+		// --- KẾT THÚC HTML MODAL ---
+	} else {
+		echo "<p class='text-center p-t-50'>Không tìm thấy sản phẩm (ID: $ma_sp)</p>";
+	}
+	exit;
+}
+
 ?>
 				<!-- Modal1: Quick View -->
 				<div class="wrap-modal1 js-modal1 p-t-60 p-b-20">
@@ -414,19 +595,6 @@ function getColorHex($colorName)
 										Bộ lọc
 									</div>
 
-									<?php if ($sort !== 'default' || $price_from !== null || $price_to !== null || $color !== null): ?>
-										<?php
-										$paramsClear = $_GET;
-										unset($paramsClear['sort'], $paramsClear['price_from'], $paramsClear['price_to'], $paramsClear['color'], $paramsClear['page']);
-										$urlClear = '?' . http_build_query($paramsClear);
-										?>
-										<a href="<?php echo $urlClear; ?>"
-											class="flex-c-m stext-106 cl6 size-104 bor4 pointer hov-btn3 trans-04 m-r-8 m-tb-4 text-danger font-weight-bold">
-											<i class="zmdi zmdi-close m-r-6"></i>
-											Bỏ lọc
-										</a>
-									<?php endif; ?>
-
 									<div
 										class="flex-c-m stext-106 cl6 size-105 bor4 pointer hov-btn3 trans-04 m-tb-4 js-show-search">
 										<i class="icon-search cl2 m-r-6 fs-15 trans-04 zmdi zmdi-search"></i>
@@ -468,17 +636,12 @@ function getColorHex($colorName)
 												];
 												foreach ($filters as $key => $label) {
 													$active = ($sort == $key) ? 'filter-link-active' : '';
+													// giữ lại category / price / color khi đổi sort
 													$params = $_GET;
-													unset($params['page']); // RESET PAGE
-													if ($sort == $key) {
-														unset($params['sort']);
-													} else {
-														$params['sort'] = $key;
-													}
+													$params['sort'] = $key;
 													$url = '?' . http_build_query($params);
-													$activeIcon = ($sort == $key) ? ' <i class="zmdi zmdi-close-circle-o m-l-4 text-danger"></i>' : '';
 													echo '<li class="p-b-6">
-										<a href="' . $url . '" class="filter-link stext-106 trans-04 ' . $active . '">' . $label . $activeIcon . '</a>
+										<a href="' . $url . '" class="filter-link stext-106 trans-04 ' . $active . '">' . $label . '</a>
 									</li>';
 												}
 												?>
@@ -498,7 +661,7 @@ function getColorHex($colorName)
 												
 												// Tất cả
 												$paramsAll = $_GET;
-												unset($paramsAll['price_from'], $paramsAll['price_to'], $paramsAll['page']);
+												unset($paramsAll['price_from'], $paramsAll['price_to']);
 												$urlAll = '?' . http_build_query($paramsAll);
 												$activeAll = (!$price_from && !$price_to) ? 'filter-link-active' : '';
 												echo '<li class="p-b-6"><a href="' . $urlAll . '" class="filter-link stext-106 trans-04 ' . $activeAll . '">Tất cả</a></li>';
@@ -509,30 +672,23 @@ function getColorHex($colorName)
 														$to = null;
 
 													$paramsPrice = $_GET;
-													unset($paramsPrice['page']); // RESET PAGE
-													
-													$isActive = ($price_from === $from && (($price_to === $to) || ($to === null && !$price_to)));
-													if ($isActive) {
-														unset($paramsPrice['price_from'], $paramsPrice['price_to']);
-													} else {
-														$paramsPrice['price_from'] = $from;
-														if ($to)
-															$paramsPrice['price_to'] = $to;
-														else
-															unset($paramsPrice['price_to']);
-													}
+													$paramsPrice['price_from'] = $from;
+													if ($to)
+														$paramsPrice['price_to'] = $to;
+													else
+														unset($paramsPrice['price_to']);
 													$urlP = '?' . http_build_query($paramsPrice);
 
-													$activeClass = $isActive ? 'filter-link-active' : '';
-													$activeIcon = $isActive ? ' <i class="zmdi zmdi-close-circle-o m-l-4 text-danger"></i>' : '';
+													$isActive = ($price_from === $from && (($price_to === $to) || ($to === null && !$price_to)))
+														? 'filter-link-active' : '';
 
-													echo '<li class="p-b-6"><a href="' . $urlP . '" class="filter-link stext-106 trans-04 ' . $activeClass . '">';
+													echo '<li class="p-b-6"><a href="' . $urlP . '" class="filter-link stext-106 trans-04 ' . $isActive . '">';
 													if ($to) {
 														echo number_format($from) . "₫ - " . number_format($to) . "₫";
 													} else {
 														echo "Trên " . number_format($from) . "₫";
 													}
-													echo $activeIcon . '</a></li>';
+													echo '</a></li>';
 												}
 												?>
 											</ul>
@@ -544,24 +700,15 @@ function getColorHex($colorName)
 											<ul>
 												<?php foreach ($colors as $c):
 													$paramsColor = $_GET;
-													unset($paramsColor['page']); // RESET PAGE
-													
-													$isActiveC = ($color === $c);
-													if ($isActiveC) {
-														unset($paramsColor['color']);
-													} else {
-														$paramsColor['color'] = $c;
-													}
+													$paramsColor['color'] = $c;
 													$urlC = '?' . http_build_query($paramsColor);
-													$activeC = $isActiveC ? 'filter-link-active' : '';
-													$activeIcon = $isActiveC ? ' <i class="zmdi zmdi-close-circle-o m-l-4 text-danger"></i>' : '';
+													$activeC = ($color === $c) ? 'filter-link-active' : '';
 													?>
 													<li class="p-b-6">
 														<a href="<?php echo $urlC; ?>"
 															class="filter-link color-filter-link stext-106 trans-04 d-inline-flex align-items-center gap-2 <?php echo $activeC; ?>">
 															<span class="color-dot" style="background-color: <?php echo getColorHex($c); ?>; <?php echo (mb_strtolower(trim($c), 'UTF-8') == 'trắng') ? 'border: 1px solid #cbd5e1;' : ''; ?>"></span>
 															<span><?php echo htmlspecialchars($c); ?></span>
-															<?php echo $activeIcon; ?>
 														</a>
 													</li>
 												<?php endforeach; ?>
@@ -632,14 +779,8 @@ function getColorHex($colorName)
 							</div>
 							<div class="flex-c-m flex-w w-full p-t-45">
 								<?php if ($totalPages > 1): ?>
-									<?php for ($i = 1; $i <= $totalPages; $i++): 
-										$paramsPage = $_GET;
-										unset($paramsPage['page']);
-										$paramsPage['page'] = $i;
-										$urlPage = '?' . http_build_query($paramsPage);
-										$active = ($page == $i) ? 'active-pagination1' : '';
-									?>
-										<a href="<?= htmlspecialchars($urlPage) ?>"
+									<?php for ($i = 1; $i <= $totalPages; $i++): ?>
+										<a href="<?= $urlPage ?>"
 											class="flex-c-m how-pagination1 trans-04 m-all-7 <?= $active ?>">
 											<?= $i ?>
 										</a>

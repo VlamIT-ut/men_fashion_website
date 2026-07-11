@@ -8,7 +8,7 @@ $(document).ready(function() {
         $('#modal-content-loader').html('<div style="padding:50px; text-align:center;">Đang tải dữ liệu...</div>');
 
         $.ajax({
-            url: 'ajax_quickview.php',
+            url: '',
             type: 'POST',
             data: { 
                 lay_thong_tin_sp_ajax: true,
