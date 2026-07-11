@@ -632,8 +632,14 @@ function getColorHex($colorName)
 							</div>
 							<div class="flex-c-m flex-w w-full p-t-45">
 								<?php if ($totalPages > 1): ?>
-									<?php for ($i = 1; $i <= $totalPages; $i++): ?>
-										<a href="<?= $urlPage ?>"
+									<?php for ($i = 1; $i <= $totalPages; $i++): 
+										$paramsPage = $_GET;
+										unset($paramsPage['page']);
+										$paramsPage['page'] = $i;
+										$urlPage = '?' . http_build_query($paramsPage);
+										$active = ($page == $i) ? 'active-pagination1' : '';
+									?>
+										<a href="<?= htmlspecialchars($urlPage) ?>"
 											class="flex-c-m how-pagination1 trans-04 m-all-7 <?= $active ?>">
 											<?= $i ?>
 										</a>
